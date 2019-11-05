@@ -44,13 +44,19 @@ def test_load_files():
 
 def test_combine_files():
     site = combine_tools.Site(Path('data/raw/COBRE'))
-    assert isinstance(site.combined, NDFrame)
+    assert isinstance(site.data, NDFrame)
 
 
-def test_combine_all_site():
+def test_combine_all_scanners():
     site = combine_tools.Site(Path('data/raw/IXI'))
-    site._combine_all_scanners()
-    assert isinstance(site.SCANNER01.combined, NDFrame)
-    assert isinstance(site.SCANNER02.combined, NDFrame)
-    assert isinstance(site.SCANNER03.combined, NDFrame)
-    assert isinstance(site.combined, NDFrame)
+    assert isinstance(site.SCANNER01.data, NDFrame)
+    assert isinstance(site.SCANNER02.data, NDFrame)
+    assert isinstance(site.SCANNER03.data, NDFrame)
+    assert isinstance(site.data, NDFrame)
+
+
+def test_combine_all_sites():
+    DATASET = combine_tools.DataSet(Path('data/raw/'))
+    assert isinstance(DATASET.IXI.data, NDFrame)
+    assert isinstance(DATASET.COBRE.data, NDFrame)
+    assert isinstance(DATASET.data, NDFrame)
