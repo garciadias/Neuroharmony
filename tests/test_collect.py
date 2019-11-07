@@ -17,18 +17,25 @@ def resouces(tmpdir_factory):
     r.fsurfer_root = '%sFreeSurfer_preprocessed/' % r.server_root
     tmpdir = tmpdir_factory.mktemp('tmp').mkdir('output_tmp')
     r.tmpdir = tmpdir
-    r.participants_list = list(collect_tools.find_all_files_by_name(r.bids_root, 'participants.tsv', depth=2))
+    r.participants_list = list(collect_tools.find_all_files_by_name(r.bids_root,
+                                                                    'participants.tsv',
+                                                                    depth=2))
     return r
 
 
 def test_find_all_files_and_collect_datafile(resouces):
     participants_list = resouces.participants_list
-    n_files = int(popen('find %s -maxdepth 2 -name \'participants.tsv\' | wc -l' % resouces.bids_root).read())
+    n_files = int(popen('find %s -maxdepth 2 -name \'participants.tsv\' | wc -l' %
+                        resouces.bids_root).read())
+    rise_server_disconnected = "The path for the bids data is not found. Verify if the server is connected"
+    assert Path(resouces.bids_root).exists(), rise_server_disconnected
     assert len(participants_list) == n_files
     return participants_list
 
 
 def test_collect_datafile(resouces):
     participants_list = resouces.participants_list
-    collect_tools.collect_datafile(str(participants_list[0]), resouces.bids_root, str(resouces.tmpdir))
-    assert Path(str(participants_list[0]).replace(resouces.bids_root, str(resouces.tmpdir))).exists()
+    collect_tools.collect_datafile(str(participants_list[0]),
+                                   resouces.bids_root, str(resouces.tmpdir))
+    assert Path(str(participants_list[0]).replace(resouces.bids_root,
+                                                  str(resouces.tmpdir))).exists()
