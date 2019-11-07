@@ -4,6 +4,26 @@ from shutil import copyfile
 
 
 def find_all_files_by_name(directory_path, file_pattern, depth=2):
+    """
+    Find all files in a folder.
+
+    Parameters
+    ----------
+    directory_path: string
+        Path for a giving folder.
+
+    file_pattern: string
+        File extension (.csv, .pdf, .txt, ...).
+
+    depth: int
+        Depth of the file search.
+
+    Returns
+    -------
+    filelist: list
+        List of paths to the found files in the format of pathlib.PosixPath.
+
+    """
     filelist = []
     for level in range(depth):
         filelist.extend(list(Path(directory_path).glob('/'.join(level * ['*'] + [file_pattern]))))
@@ -11,6 +31,26 @@ def find_all_files_by_name(directory_path, file_pattern, depth=2):
 
 
 def collect_datafile(filepath, root_path, local_path):
+    """
+    Collect a datafile.
+
+    Parameters
+    ----------
+    filepath: string or pathlib.PosixPath
+        Path for the file to be copied.
+
+    root_path: string
+        Path root to the origin of the data.
+
+    local_path: string
+        Path to the local folder you want to save the copied data.
+
+    Returns
+    -------
+    file_exists: boolean
+        Returns True if the files were copied correctly and False otherwise.
+
+    """
     filepath = str(filepath)
     local_final_path = filepath.replace(root_path, local_path)
     Path(local_final_path).parent.mkdir(parents=True, exist_ok=True)
@@ -19,6 +59,26 @@ def collect_datafile(filepath, root_path, local_path):
 
 
 def collect_multiple_datafile(filepath_list, root_path, local_path):
+    """
+    Collect a list of datafiles.
+
+    Parameters
+    ----------
+    filepath_list: list of sring or pathlib.PosixPath
+        List of paths for the file to be copied.
+
+    root_path: string
+        Path root to the origin of the data.
+
+    local_path: string
+        Path to the local folder you want to save the copied data.
+
+    Returns
+    -------
+    file_exists: boolean
+        Returns True if the files were copied correctly and False otherwise.
+
+    """
     for filepath in filepath_list:
         collect_datafile(filepath, root_path, local_path)
 
