@@ -9,7 +9,49 @@ from src.data.rois import rois
 
 
 class Site(object):
-    """Site class."""
+    """
+    A class for site definition.
+
+    Tools for collecting and combining data from a site given a path to the site data.
+
+    Parameters
+    ----------
+    dir_path: pathlib.PosixPath
+        Path to the data of the site. The folowing files are required: freesurferData.csv, participants.tsv,
+        group_T1w.tsv, mclf*.csv, and Qoala*.csv. These files should be inside scanner folders.
+
+    Attributes
+    ----------
+    data: NDFrame
+        Dataframe containing the combined data of all scanners in the site.
+
+    Examples
+    --------
+    >>> ixi = Site(Path(data/raw/IXI))
+    >>> ixi.data
+                         3rd-Ventricle  4th-Ventricle  Age          Brain-Stem ... site
+    Participant_ID
+    sub-035-0            0.000528       0.000607       37.144422    0.015725   ... IXI
+    sub-230-0            0.000751       0.001479       21.152635    0.013917   ... IXI
+    sub-231-0            0.000861       0.001068       58.992471    0.012547   ... IXI
+    sub-232-0            0.000478       0.000502       28.810404    0.013322   ... IXI
+    sub-233-0            0.000420       0.000725       26.754278    0.014778   ... IXI
+
+    [535 rows x 180 columns]
+
+    >>> ixi.SCANNER01.data
+                Left-Lateral-Ventricle	 Left-Inf-Lat-Vent ... scanner
+    Participant_ID
+    sub-002-2	0.003274	             0.000123	... IXI-SCANNER01
+    sub-016-2	0.015889	             0.000380	... IXI-SCANNER01
+    sub-017-2	0.007326	             0.000148	... IXI-SCANNER01
+    ...	        ...	                     ...	    ...	...
+    sub-582-2	0.002624	             0.000146	... IXI-SCANNER01
+    sub-584-2	0.004854	             0.000188	... IXI-SCANNER01
+    sub-585-2	0.004373	             0.000218	... IXI-SCANNER01
+
+    [313 rows × 179 columns]
+    """
 
     def __init__(self, dir_path):
         self.dir_path = dir_path
@@ -17,6 +59,13 @@ class Site(object):
         self._get_scanners()
 
     def _get_scanners(self):
+        """
+        Collect data for the site.
+
+        This method verifies if the site has multiples scanners and combine the data from freesurfer, MRIQC and Qoala.
+        If the data is not availiable it returns an empty dataframe.
+
+        """
         subdirs = [subpath.name for subpath in self.dir_path.glob('*')
                    if subpath.is_dir()]
         if len(subdirs) == 0:
@@ -40,6 +89,7 @@ class Site(object):
         self.data['site'] = self.name
 
     def _files_exists(self, directory_path, file_pattern):
+        """Verifies if a file exists and is the unique file of that kind in the folder."""
         file_search = find_all_files_by_name(directory_path, file_pattern)
         if len(file_search) == 0:
             return False
@@ -50,6 +100,7 @@ class Site(object):
             warnings.warn('There are more than one %s file in this site.' % file_pattern)
 
     def _get_files(self):
+        """Verifies if each of the files exist and is unique."""
         self.freesurferData_path = self._files_exists(self.dir_path, 'freesurferData.csv')
         self.participants_path = self._files_exists(self.dir_path, 'participants.tsv')
         self.iqm_path = self._files_exists(self.dir_path, 'group_T1w.tsv')
@@ -57,6 +108,7 @@ class Site(object):
         self.qoala_path = self._files_exists(self.dir_path, 'Qoala*.csv')
 
     def _is_complete(self):
+        """Verifies if all necessary files are there."""
         return all([self.freesurferData_path,
                     self.participants_path,
                     self.iqm_path,
@@ -97,6 +149,7 @@ class Site(object):
         self.data = x
 
     def _combine_all_scanners(self):
+        """If there are multiple scanners on a site they will be combined in the attribute 'data'."""
         n_scanners = len(self.scanner_list)
         participant_id_format = '-%%0%dd' % len(str(n_scanners))
         for scanner_id, scanner_name in enumerate(self.scanner_list):
@@ -118,7 +171,38 @@ class Site(object):
 
 
 class Scanner(Site):
-    """Scanners class."""
+    """
+    A class for scanner definition.
+
+    Tools for collecting and combining data from a single scanner given a path to the scanner data.
+
+    Parameters
+    ----------
+    dir_path: pathlib.PosixPath
+        Path to the data of the scanner. The folowing files are required: freesurferData.csv, participants.tsv,
+        group_T1w.tsv, mclf*.csv, and Qoala*.csv.
+
+    Attributes
+    ----------
+    data: NDFrame
+        Dataframe containing the combined data of all scanners in the site.
+
+    Examples
+    --------
+    >>> scanner_01 = Site(Path(data/raw/IXI/SCANNER01))
+    >>> scanner_01.data
+                Left-Lateral-Ventricle	 Left-Inf-Lat-Vent ... scanner
+    Participant_ID
+    sub-002-2	0.003274	             0.000123	... IXI-SCANNER01
+    sub-016-2	0.015889	             0.000380	... IXI-SCANNER01
+    sub-017-2	0.007326	             0.000148	... IXI-SCANNER01
+    ...	        ...	                     ...	    ...	...
+    sub-582-2	0.002624	             0.000146	... IXI-SCANNER01
+    sub-584-2	0.004854	             0.000188	... IXI-SCANNER01
+    sub-585-2	0.004373	             0.000218	... IXI-SCANNER01
+
+    [313 rows × 179 columns]
+    """
 
     def __init__(self, dir_path):
         self.dir_path = dir_path
@@ -126,7 +210,64 @@ class Scanner(Site):
 
 
 class DataSet(Site):
-    """Dataset class."""
+    """
+    A class for dataset definition.
+
+    Tools for collecting and combining data from all sites given a path to a BIDS dataset.
+
+    Parameters
+    ----------
+    dir_path: pathlib.PosixPath
+        Path to the data of the site. The folowing files are required: freesurferData.csv, participants.tsv,
+        group_T1w.tsv, mclf*.csv, and Qoala*.csv. These files should be inside scanner folders which should be inside
+        site folders.
+
+    Attributes
+    ----------
+    data: NDFrame
+        Dataframe containing the combined data of all scanners in the site.
+
+    Examples
+    --------
+    >>> DATASET = DataSet(Path(data/raw/))
+    >>> Data.data
+                         3rd-Ventricle  4th-Ventricle  Age          Brain-Stem ... site
+    Participant_ID
+    sub-035-00-00        0.000528       0.000607       37.144422    0.015725   ... IXI
+    sub-230-00-00        0.000751       0.001479       21.152635    0.013917   ... IXI
+    sub-231-00-00        0.000861       0.001068       58.992471    0.012547   ... IXI
+    ...                  ...            ...            ...          ...        ... ...
+    sub-45-00-33	     0.000570	    0.001581	   21.0	        0.011838   ... MoralJudgment
+    sub-46-00-33	     0.000552	    0.001528	   36.0	        0.013947   ... MoralJudgment
+    sub-47-00-33	     0.000609	    0.000893	   20.0	        0.013515   ... MoralJudgment
+
+    [9303 rows × 180 columns]
+
+    >>> DATASET.IXI.data
+                         3rd-Ventricle  4th-Ventricle  Age          Brain-Stem ... site
+    Participant_ID
+    sub-035-0            0.000528       0.000607       37.144422    0.015725   ... IXI
+    sub-230-0            0.000751       0.001479       21.152635    0.013917   ... IXI
+    sub-231-0            0.000861       0.001068       58.992471    0.012547   ... IXI
+    sub-232-0            0.000478       0.000502       28.810404    0.013322   ... IXI
+    sub-233-0            0.000420       0.000725       26.754278    0.014778   ... IXI
+
+    [535 rows x 180 columns]
+
+    >>> DATASET.IXI.SCANNER01.data
+                Left-Lateral-Ventricle	 Left-Inf-Lat-Vent ... scanner
+    Participant_ID
+    sub-002-2	0.003274	             0.000123	... IXI-SCANNER01
+    sub-016-2	0.015889	             0.000380	... IXI-SCANNER01
+    sub-017-2	0.007326	             0.000148	... IXI-SCANNER01
+    ...	        ...	                     ...	    ...	...
+    sub-582-2	0.002624	             0.000146	... IXI-SCANNER01
+    sub-584-2	0.004854	             0.000188	... IXI-SCANNER01
+    sub-585-2	0.004373	             0.000218	... IXI-SCANNER01
+
+    [313 rows × 179 columns]
+
+    """
 
     def __init__(self, dir_path):
         self.dir_path = dir_path
