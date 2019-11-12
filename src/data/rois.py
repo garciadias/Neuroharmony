@@ -1,3 +1,4 @@
+"""List of Regions of interest."""
 rois = ['Left-Lateral-Ventricle',
         'Left-Inf-Lat-Vent',
         'Left-Cerebellum-White-Matter',
