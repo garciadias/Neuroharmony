@@ -1,4 +1,4 @@
-
+"""Define combining tools."""
 from pathlib import Path
 import warnings
 
@@ -9,8 +9,7 @@ from src.data.rois import rois
 
 
 class Site(object):
-    """
-    A class for site definition.
+    """A class for site definition.
 
     Tools for collecting and combining data from a site given a path to the site data.
 
@@ -51,6 +50,7 @@ class Site(object):
     sub-585-2	0.004373	             0.000218	... IXI-SCANNER01
 
     [313 rows × 179 columns]
+
     """
 
     def __init__(self, dir_path):
@@ -89,7 +89,7 @@ class Site(object):
         self.data['site'] = self.name
 
     def _files_exists(self, directory_path, file_pattern):
-        """Verifies if a file exists and is the unique file of that kind in the folder."""
+        """Verify if a file exists and is the unique file of that kind in the folder."""
         file_search = find_all_files_by_name(directory_path, file_pattern)
         if len(file_search) == 0:
             return False
@@ -100,7 +100,7 @@ class Site(object):
             warnings.warn('There are more than one %s file in this site.' % file_pattern)
 
     def _get_files(self):
-        """Verifies if each of the files exist and is unique."""
+        """Verify if each of the files exist and is unique."""
         self.freesurferData_path = self._files_exists(self.dir_path, 'freesurferData.csv')
         self.participants_path = self._files_exists(self.dir_path, 'participants.tsv')
         self.iqm_path = self._files_exists(self.dir_path, 'group_T1w.tsv')
@@ -108,7 +108,7 @@ class Site(object):
         self.qoala_path = self._files_exists(self.dir_path, 'Qoala*.csv')
 
     def _is_complete(self):
-        """Verifies if all necessary files are there."""
+        """Verify if all necessary files are there."""
         return all([self.freesurferData_path,
                     self.participants_path,
                     self.iqm_path,
@@ -202,6 +202,7 @@ class Scanner(Site):
     sub-585-2	0.004373	             0.000218	... IXI-SCANNER01
 
     [313 rows × 179 columns]
+
     """
 
     def __init__(self, dir_path):
