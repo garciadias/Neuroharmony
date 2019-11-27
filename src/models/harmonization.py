@@ -6,6 +6,7 @@ import sys
 from neuroCombat import neuroCombat
 from pandas.core.generic import NDFrame
 from pandas import Series, DataFrame, concat
+from sklearn.preprocessing import LabelEncoder
 from numpy import unique
 
 
@@ -50,12 +51,16 @@ class ComBat():
         harmonized = DataFrame(harmonized, index=df.index, columns=self.features)
         return concat([harmonized, df.loc[harmonized.index][extra_vars]], axis=1, sort=True)
 
-    def _factorize_covars(self, df):
+    def _label_encode_covars(self, df):
+        self.encoders = {}
         for covar in self.covars:
-            try:
-                df[covar] = df[covar].astype(int).factorize()[0]
-            except ValueError:
-                df[covar] = df[covar].astype(str).factorize()[0]
+            self.encoders[covar] = LabelEncoder()
+            df[covar] = self.encoders[covar].fit_transform(df[covar])
+        return df
+
+    def _label_dencode_covars(self, df):
+        for covar in self.covars:
+            df[covar] = self.encoders[covar].inverse_transform(df[covar])
         return df
 
     def _exclude_single_subject_groups(self, df):
@@ -78,7 +83,7 @@ class ComBat():
                                 covars=harmonized[self.covars],
                                 batch_col=batch_col, )
             harmonized = self._reconstruct_original_fieds(df, harmonized, extra_vars)
-        return harmonized
+        return self._label_dencode_covars(harmonized)
 
     def _exclude_subjects_with_nans(self, df):
         return df[~df.isna().any(axis=1)]
@@ -121,7 +126,7 @@ class ComBat():
 
         """
         self._check_data(X)
-        X = self._factorize_covars(X)
+        X = self._label_encode_covars(X)
         X = self._exclude_single_subject_groups(X)
         X = self._exclude_subjects_with_nans(X)
         return self._run_combat(X)
