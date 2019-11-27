@@ -1,4 +1,4 @@
-"""Tools for ComBat harmonization."""
+"""Tools for harmonization."""
 
 import os
 import sys
@@ -130,3 +130,10 @@ class ComBat():
         X = self._exclude_single_subject_groups(X)
         X = self._exclude_subjects_with_nans(X)
         return self._run_combat(X)
+
+
+class Neuroharmony(object):
+    """docstring for Neuroharmony."""
+
+    def __init__(self):
+        super(Neuroharmony, self).__init__()
