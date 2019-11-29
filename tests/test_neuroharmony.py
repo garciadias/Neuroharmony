@@ -7,6 +7,7 @@ from pathlib import Path, PosixPath
 import pytest
 from scipy.special import comb
 
+from sklearn.utils.estimator_checks import check_transformer_general
 from src.data.combine_tools import DataSet
 from src.models.harmonization import ComBat, Neuroharmony
 from src.models.metrics import ks_test_grid
@@ -38,22 +39,21 @@ def resouces(tmpdir_factory):
     test_bool = original_data.scanner.isin(scanners[:1])
     r.X_train_split = original_data[train_bool][r.features + r.covars]
     r.X_test_split = original_data[test_bool][r.features + r.covars]
-
-    combat = ComBat(r.features, r.covars)
-    X_harmonized = combat.transform(r.X_train_split)
-    r.delta = r.X_train_split[r.features] - X_harmonized[r.features]
-    r.delta = concat([r.delta, original_data[extra_vars]], axis=1, sort=False).dropna()
-    r.y_train_split = concat([r.delta, original_data[extra_vars]], axis=1, sort=False).dropna()
     r.n_scanners = len(original_data.scanner.unique())
     return r
 
 
 def test_neuroharmony_is_functional(resouces):
     """Test Neuroharmony."""
-    x_train, x_test, y_train = resouces.X_train_split, resouces.X_test_split, resouces.y_train_split
-    neuroharmony = Neuroharmony()
-    neuroharmony.fit(x_train, y_train)
+    x_train, x_test = resouces.X_train_split, resouces.X_test_split
+    neuroharmony = Neuroharmony(resouces.features, resouces.covars)
+    # neuroharmony.fit(x_train)
+    # x_harmonized = neuroharmony.fit_transform(x_train)
     pass
+
+
+# def test_sklearn_compatibility(resouces):
+#     check_transformer_general('ComBat', ComBat(resouces.features, resouces.covars))
 
 
 # def test_combat_is_functional(resouces):
