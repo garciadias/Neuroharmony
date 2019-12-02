@@ -47,8 +47,8 @@ def test_neuroharmony_is_functional(resouces):
     """Test Neuroharmony."""
     x_train, x_test = resouces.X_train_split, resouces.X_test_split
     neuroharmony = Neuroharmony(resouces.features, resouces.covars)
-    # neuroharmony.fit(x_train)
-    # x_harmonized = neuroharmony.fit_transform(x_train)
+    neuroharmony.fit(x_train)
+    x_harmonized = neuroharmony.fit_transform(x_train)
     pass
 
 

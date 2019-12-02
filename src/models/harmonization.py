@@ -93,26 +93,26 @@ class ComBat(BaseEstimator, TransformerMixin):
     def _exclude_subjects_with_nans(self, df):
         return df[~df.isna().any(axis=1)]
 
-    def transform(self, X, y=None):
+    def transform(self, df, y=None):
         """Run ComBat normalization.
 
         Transforms.
 
         Parameters
         ----------
-        X: NDFrame, shape(n_subjects, n_features)
-            Dataframe with data for each subject. The dataframe has to contain the features to be harmonized pandas
-            the covars which you want to use to harmonization.
+        df: NDFrame, of shape [n_subjects, n_features]
+         Dataframe with data for each subject. The dataframe has to contain the features to be harmonized pandas
+         the covars which you want to use to harmonization.
 
         Returns
         -------
         harmonized: NDFrame, shape(n_subjects, n_features)
-            Dataframe with the harmonized data.
+         Dataframe with the harmonized data.
 
         Raises
         ------
         ValueError:
-            If there are missing features among the covars or the features.
+         If there are missing features among the covars or the features.
 
         Examples
         --------
@@ -131,17 +131,50 @@ class ComBat(BaseEstimator, TransformerMixin):
         sub-015-00-1  0.003310                0.000154           1       1        26
 
         """
-        self._check_data(X)
-        X = self._label_encode_covars(X)
-        X = self._exclude_single_subject_groups(X)
-        X = self._exclude_subjects_with_nans(X)
-        return self._run_combat(X)
+        self._check_data(df)
+        df = self._label_encode_covars(df)
+        df = self._exclude_single_subject_groups(df)
+        df = self._exclude_subjects_with_nans(df)
+        return self._run_combat(df)
 
-    def fit(self, X, y=None):
-        self.harmonized_ = self.transform(X)
+    def fit(self, df):
+        """Fit the model.
 
-    def fit_transform(self, X, y=None):
-        self.harmonized_ = self.transform(X)
+        Fit all the transforms one after the other and transform the
+        data, then fit the transformed data using the final estimator.
+
+        Parameters
+        ----------
+        df: NDFrame, of shape [n_subjects, n_features]
+         Training data. Must fulfill input requirements of first step of the pipeline.
+
+        Returns
+        -------
+        self : ComBat
+         This estimator
+
+        """
+        self.harmonized_ = self.transform(df)
+        return self
+
+    def fit_transform(self, df):
+        """Fit to data, then transform it.
+
+        Fits transformer to df and y with optional parameters fit_params
+        and returns a transformed version of df.
+
+        Parameters
+        ----------
+        df: NDFrame, of shape [n_subjects, n_features]
+         Training set.
+
+        Returns
+        -------
+        harmonized_: NDFrame, of shape [n_samples, n_features_new]
+         Transformed array.
+
+        """
+        self.harmonized_ = self.transform(df)
         return self.harmonized_
 
 
@@ -393,7 +426,6 @@ class Neuroharmony(BaseEstimator, TransformerMixin):
         expensive and is not strictly required to select the parameters that
         yield the best generalization performance.
 
-
     Attributes
     ----------
     estimators_ : list of DecisionTreeRegressor
@@ -491,8 +523,8 @@ class Neuroharmony(BaseEstimator, TransformerMixin):
         Seconds used for refitting the best model on the whole dataset.
         This is present only if ``refit`` is not False.
 
-
     """
+
     param_distribution = {'randomforestregressor__n_estimators': [100, 200, 500],
                           'randomforestregressor__warm_start': [False, True],
                           }
@@ -566,9 +598,9 @@ class Neuroharmony(BaseEstimator, TransformerMixin):
         self.with_centering = with_centering
         self.with_scaling = with_scaling
 
-    def _random_search_with_leave_one_group_out_cv(self, x_split, y_split, groups):
-        leaveonegroupout = LeaveOneGroupOut()
-        cv_splits = list(leaveonegroupout.split(x_split, y_split, groups))
+    def _random_search_with_leave_one_group_out_cv(self, X, y, groups):
+        self.leaveonegroupout_ = LeaveOneGroupOut()
+        self.cv_ = list(self.leaveonegroupout_.split(X, y, groups))
         pipeline = Pipeline(
             steps=[(self.scaler.__class__.__name__, self.scaler),
                    (self.estimator.__class__.__name__, self.estimator),
@@ -580,34 +612,80 @@ class Neuroharmony(BaseEstimator, TransformerMixin):
                                                         n_jobs=self.n_jobs,
                                                         iid=self.iid,
                                                         refit=self.refit,
-                                                        cv=self.cv,
+                                                        cv=self.cv_,
                                                         verbose=self.verbose,
                                                         pre_dispatch=self.pre_dispatch,
                                                         random_state=self.random_state,
                                                         error_score=self.error_score,
                                                         return_train_score=self.return_train_score,
                                                         )
-        self.randomized_search_cv_.fit(x_split, y_split)
+        self.randomized_search_cv_.fit(X, y)
+        return self.randomized_search_cv_.fit(X, y)
+
+    def _label_encode_covars(self, df):
+        self.encoders = {}
+        for covar in self.covars:
+            self.encoders[covar] = LabelEncoder()
+            df[covar] = self.encoders[covar].fit_transform(df[covar])
+        return df
+
+    def _label_dencode_covars(self, df):
+        for covar in self.covars:
+            df[covar] = self.encoders[covar].inverse_transform(df[covar])
+        return df
 
     def _train_neurofind(self, estimator=RandomForestRegressor()):
         name = estimator.__class__.__name__
 
-    def _train_test_split_leave_one_out(self, X):
-        split = LeaveOneGroupOut()
-        pass
-
-    def _run_combat(self, X):
+    def _run_combat(self, df):
+        self.extra_vars = df.columns[~df.columns.isin(self.features)]
         combat = ComBat(self.features, self.covars)
-        # X_train_split, X_test_split = self._train_test_split_leave_one_out(X)
-        X_harmonized = combat.transform(X_train_split)
-        delta = X_train_split[features] - X_harmonized[features]
-        delta = concat([delta, original_data[extra_vars]], axis=1, sort=False).dropna()
-        y_train_split = concat([delta, original_data[extra_vars]], axis=1, sort=False).dropna()
-        return X_train_split, X_test_split, y_train_split
+        X_harmonized = combat.transform(df)
+        delta = df[self.features] - X_harmonized[self.features]
+        delta = concat([delta, df[self.extra_vars]], axis=1, sort=False).dropna()
+        y_train_split = concat([delta, df[self.extra_vars]], axis=1, sort=False).dropna()
+        X_train_split = df.loc[y_train_split.index]
+        return X_train_split, y_train_split
 
-    def fit(self, X):
-        # X_train_split, X_test_split, y_train_split = self._run_combat(X)
-        pass
+    def fit(self, df):
+        """Fit the model.
 
-    def fit_transform(self, X):
+        Fit all the transforms one after the other and transform the
+        data, then fit the transformed data using the final estimator.
+
+        Parameters
+        ----------
+        df: NDFrame, of shape [n_subjects, n_features]
+         Training data. Must fulfill input requirements of first step of the pipeline.
+
+        Returns
+        -------
+        self : Neuroharmony
+         This estimator
+
+        """
+        df = self._label_encode_covars(df)
+        X_train_split, y_train_split = self._run_combat(df)
+        [print(len(x)) for x in [X_train_split, y_train_split, y_train_split.scanner]]
+        self._random_search_with_leave_one_group_out_cv(
+            X_train_split, y_train_split, y_train_split.scanner)
+        return self
+
+    def fit_transform(self, df):
+        """Fit to data, then transform it.
+
+        Fits transformer to df and y with optional parameters fit_params
+        and returns a transformed version of df.
+
+        Parameters
+        ----------
+        df: NDFrame, of shape [n_subjects, n_features]
+         Training set.
+
+        Returns
+        -------
+        harmonized_: NDFrame, of shape [n_samples, n_features_new]
+         Transformed array.
+
+        """
         pass
