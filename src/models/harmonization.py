@@ -9,8 +9,10 @@ from pandas.core.generic import NDFrame
 from pandas import Series, DataFrame, concat
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.model_selection import LeaveOneGroupOut
+from sklearn.model_selection import LeaveOneGroupOut, RandomizedSearchCV
 from sklearn.preprocessing import LabelEncoder, RobustScaler
+from sklearn.pipeline import Pipeline
+from tqdm import tqdm
 
 from src.data.rois import rois
 
@@ -261,7 +263,7 @@ class Neuroharmony(BaseEstimator, TransformerMixin):
            ``min_impurity_split`` will change from 1e-7 to 0 in 0.23 and it
            will be removed in 0.25. Use ``min_impurity_decrease`` instead.
     bootstrap : boolean, optional (default=True)
-        Whether bootstrap samples are used when building trees. If False, the
+        Whether bootstrap samples are uself.regression_featuressed when building trees. If False, the
         whole datset is used to build each tree.
     oob_score : bool, optional (default=False)
         whether to use out-of-bag samples to estimate
@@ -376,7 +378,7 @@ class Neuroharmony(BaseEstimator, TransformerMixin):
         - An iterable yielding (train, test) splits as arrays of indices.
         For integer/None inputs, if the estimator is a classifier and ``y`` is
         either binary or multiclass, :class:`StratifiedKFold` is used. In all
-        other cases, :class:`KFold` is used.
+        other cases, :class:`KFold` is self.regression_featuresused.
         Refer :ref:`User Guide <cross_validation>` for the various
         cross-validation strategies that can be used here.
         .. versionchanged:: 0.20
@@ -392,7 +394,7 @@ class Neuroharmony(BaseEstimator, TransformerMixin):
         choosing a best estimator, ``refit`` can be set to a function which
         returns the selected ``best_index_`` given the ``cv_results``.
         The refitted estimator is made available at the ``best_estimator_``
-        attribute and permits using ``predict`` directly on this
+        attribute and permits using ``pself.regression_featuresredict`` directly on this
         ``RandomizedSearchCV`` instance.
         Also for multiple metric evaluation, the attributes ``best_index_``,
         ``best_score_`` and ``best_params_`` will only be available if
@@ -525,12 +527,15 @@ class Neuroharmony(BaseEstimator, TransformerMixin):
 
     """
 
-    param_distribution = {'randomforestregressor__n_estimators': [100, 200, 500],
-                          'randomforestregressor__warm_start': [False, True],
+    param_distribution = {'RandomForestRegressor__n_estimators': [5, 10, 15, 20],
+                          'RandomForestRegressor__warm_start': [False, True],
                           }
 
     def __init__(self,
                  features=rois,
+                 regression_features=['Age', 'summary_gm_median', 'spacing_x',
+                                      'summary_gm_p95', 'cnr', 'size_x',
+                                      'cjv', 'summary_wm_mean', 'icvs_gm', 'wm2max'],
                  covars=['Gender', 'scanner', 'Age'],
                  estimator=RandomForestRegressor(),
                  scaler=RobustScaler(),
@@ -538,17 +543,20 @@ class Neuroharmony(BaseEstimator, TransformerMixin):
                  bootstrap=True,
                  copy=True,
                  criterion="mae",
+                 ccp_alpha=0.0,
                  cv='warn',
                  error_score='raise-deprecating',
                  iid='warn',
                  max_depth=None,
                  max_features="auto",
                  max_leaf_nodes=None,
+                 max_samples=None,
                  min_impurity_decrease=0.,
                  min_impurity_split=None,
                  min_samples_leaf=1,
                  min_samples_split=2,
                  min_weight_fraction_leaf=0.,
+                 model_params=None,
                  n_estimators='warn',
                  n_iter=10,
                  n_jobs=None,
@@ -566,18 +574,22 @@ class Neuroharmony(BaseEstimator, TransformerMixin):
                  ):
         """Init."""
         self.features = features
+        self.regression_features = regression_features
         self.covars = covars
         self.estimator = estimator
+        self.scaler = scaler
         self.param_distributions = param_distributions
         self.bootstrap = bootstrap
         self.copy = copy
         self.criterion = criterion
+        self.ccp_alpha = ccp_alpha
         self.cv = cv
         self.error_score = error_score
         self.iid = iid
         self.max_depth = max_depth
         self.max_features = max_features
         self.max_leaf_nodes = max_leaf_nodes
+        self.max_samples = max_samples
         self.min_impurity_decrease = min_impurity_decrease
         self.min_impurity_split = min_impurity_split
         self.min_samples_leaf = min_samples_leaf
@@ -597,6 +609,26 @@ class Neuroharmony(BaseEstimator, TransformerMixin):
         self.warm_start = warm_start
         self.with_centering = with_centering
         self.with_scaling = with_scaling
+        if self.estimator.__class__.__name__ == 'RandomForestRegressor':
+            self.estimator.set_params(bootstrap=self.bootstrap,
+                                      criterion=self.criterion,
+                                      max_depth=self.max_depth,
+                                      max_features=self.max_features,
+                                      max_leaf_nodes=self.max_leaf_nodes,
+                                      min_impurity_decrease=self.min_impurity_decrease,
+                                      min_impurity_split=self.min_impurity_split,
+                                      min_samples_leaf=self.min_samples_leaf,
+                                      min_samples_split=self.min_samples_split,
+                                      min_weight_fraction_leaf=self.min_weight_fraction_leaf,
+                                      n_estimators=self.n_estimators,
+                                      n_jobs=self.n_jobs,
+                                      oob_score=self.oob_score,
+                                      random_state=self.random_state,
+                                      verbose=self.verbose,
+                                      warm_start=self.warm_start,
+                                      )
+        else:
+            self.estimator.set_params(**model_params)
 
     def _random_search_with_leave_one_group_out_cv(self, X, y, groups):
         self.leaveonegroupout_ = LeaveOneGroupOut()
@@ -605,22 +637,22 @@ class Neuroharmony(BaseEstimator, TransformerMixin):
             steps=[(self.scaler.__class__.__name__, self.scaler),
                    (self.estimator.__class__.__name__, self.estimator),
                    ])
-        self.randomized_search_cv_ = RandomizedSearchCV(pipeline,
-                                                        param_distributions=self.param_distributions,
-                                                        n_iter=self.n_iter,
-                                                        scoring=self.scoring,
-                                                        n_jobs=self.n_jobs,
-                                                        iid=self.iid,
-                                                        refit=self.refit,
-                                                        cv=self.cv_,
-                                                        verbose=self.verbose,
-                                                        pre_dispatch=self.pre_dispatch,
-                                                        random_state=self.random_state,
-                                                        error_score=self.error_score,
-                                                        return_train_score=self.return_train_score,
-                                                        )
-        self.randomized_search_cv_.fit(X, y)
-        return self.randomized_search_cv_.fit(X, y)
+        self.randomized_search_cv = RandomizedSearchCV(pipeline,
+                                                       param_distributions=self.param_distributions,
+                                                       n_iter=self.n_iter,
+                                                       scoring=self.scoring,
+                                                       n_jobs=self.n_jobs,
+                                                       iid=self.iid,
+                                                       refit=self.refit,
+                                                       cv=self.cv_,
+                                                       verbose=self.verbose,
+                                                       pre_dispatch=self.pre_dispatch,
+                                                       random_state=self.random_state,
+                                                       error_score=self.error_score,
+                                                       return_train_score=self.return_train_score,
+                                                       )
+        self.randomized_search_cv.fit(X, y)
+        return self.randomized_search_cv
 
     def _label_encode_covars(self, df):
         self.encoders = {}
@@ -640,9 +672,8 @@ class Neuroharmony(BaseEstimator, TransformerMixin):
     def _run_combat(self, df):
         self.extra_vars = df.columns[~df.columns.isin(self.features)]
         combat = ComBat(self.features, self.covars)
-        X_harmonized = combat.transform(df)
-        delta = df[self.features] - X_harmonized[self.features]
-        delta = concat([delta, df[self.extra_vars]], axis=1, sort=False).dropna()
+        self.X_harmonized_ = combat.transform(df)
+        delta = df[self.features] - self.X_harmonized_[self.features]
         y_train_split = concat([delta, df[self.extra_vars]], axis=1, sort=False).dropna()
         X_train_split = df.loc[y_train_split.index]
         return X_train_split, y_train_split
@@ -666,9 +697,14 @@ class Neuroharmony(BaseEstimator, TransformerMixin):
         """
         df = self._label_encode_covars(df)
         X_train_split, y_train_split = self._run_combat(df)
-        [print(len(x)) for x in [X_train_split, y_train_split, y_train_split.scanner]]
-        self._random_search_with_leave_one_group_out_cv(
-            X_train_split, y_train_split, y_train_split.scanner)
+        self.models_trained_ = {}
+        desc = 'Randomized search of %s, ROIs regression' % self.estimator.__class__.__name__
+        for var in tqdm(self.features, desc=desc):
+            self.models_trained_[var] = self._random_search_with_leave_one_group_out_cv(
+                X_train_split[self.regression_features + [var]],
+                y_train_split[var],
+                y_train_split['scanner'],
+            )
         return self
 
     def fit_transform(self, df):
@@ -688,4 +724,5 @@ class Neuroharmony(BaseEstimator, TransformerMixin):
          Transformed array.
 
         """
-        pass
+        self.fit(df)
+        return self.X_harmonized_
