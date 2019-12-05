@@ -31,9 +31,8 @@ def resources(tmpdir_factory):
     r = namedtuple('resources', 'data_path')
     r.data_path = 'data/raw/IXI'
     r.features = rois[:3]
-    r.regression_features = ['Age', 'summary_gm_median', 'spacing_x',
-                             'summary_gm_p95', 'cnr', 'size_x',
-                             'cjv', 'summary_wm_mean', 'icvs_gm', 'wm2max']
+    r.regression_features = ['Age', 'summary_gm_median', 'spacing_x', 'summary_gm_p95',
+                             'cnr', 'size_x', 'cjv', 'summary_wm_mean', 'icvs_gm', 'wm2max']
     r.covars = ['Gender', 'scanner', 'Age']
     original_data = DataSet(Path(r.data_path)).data
     original_data.Age = original_data.Age.astype(int)
@@ -52,7 +51,13 @@ def test_neuroharmony_is_functional(resources):
     neuroharmony = Neuroharmony(resources.features,
                                 resources.regression_features,
                                 resources.covars,
-                                n_jobs=27)
+                                param_distributions=dict(
+                                    RandomForestRegressor__n_estimators=[5, 10, 15, 20],
+                                    RandomForestRegressor__random_state=[42, 78],
+                                    RandomForestRegressor__warm_start=[False, True],
+                                ),
+                                estimator_args=dict(n_jobs=1, random_state=42),
+                                randomized_search_args=dict(cv=5, n_jobs=27, iid=False))
     x_harmonized = neuroharmony.fit_transform(x_train)
     assert isinstance(x_harmonized, NDFrame)
     assert isinstance(neuroharmony, BaseEstimator)
