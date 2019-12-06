@@ -4,7 +4,7 @@ import os
 import sys
 
 from neuroCombat import neuroCombat
-from numpy import unique
+from numpy import unique, int32
 from pandas import Series, DataFrame, concat
 from pandas.core.generic import NDFrame
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -12,6 +12,8 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import LeaveOneGroupOut, RandomizedSearchCV
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import LabelEncoder, RobustScaler
+from sklearn.utils.validation import check_is_fitted
+from sklearn import ensemble
 from tqdm import tqdm
 
 from src.data.rois import rois
@@ -25,6 +27,21 @@ def supress_print(func):
         sys.stdout = sys.__stdout__
         return resuts
     return wrapper
+
+
+def label_encode_covars(df, covars):
+    """Encode dataframe covars."""
+    encoders = {}
+    for covar in covars:
+        encoders[covar] = LabelEncoder()
+        df[covar] = encoders[covar].fit_transform(df[covar]).astype(int)
+    return encoders
+
+
+def label_decode_covars(df, covars, encoders):
+    """Decode dataframe covars."""
+    for covar in covars:
+        df[covar] = encoders[covar].inverse_transform(df[covar])
 
 
 @supress_print
@@ -58,18 +75,6 @@ class ComBat(BaseEstimator, TransformerMixin):
         harmonized = DataFrame(harmonized, index=df.index, columns=self.features)
         return concat([harmonized, df.loc[harmonized.index][extra_vars]], axis=1, sort=True)
 
-    def _label_encode_covars(self, df):
-        self.encoders = {}
-        for covar in self.covars:
-            self.encoders[covar] = LabelEncoder()
-            df[covar] = self.encoders[covar].fit_transform(df[covar])
-        return df
-
-    def _label_dencode_covars(self, df):
-        for covar in self.covars:
-            df[covar] = self.encoders[covar].inverse_transform(df[covar])
-        return df
-
     def _exclude_single_subject_groups(self, df):
         """Exclude subjectis that are the only representants of a value in the variable field."""
         for covar in self.covars:
@@ -90,7 +95,7 @@ class ComBat(BaseEstimator, TransformerMixin):
                                 covars=harmonized[self.covars],
                                 batch_col=batch_col, )
             harmonized = self._reconstruct_original_fieds(df, harmonized, extra_vars)
-        return self._label_dencode_covars(harmonized)
+        return harmonized
 
     def _exclude_subjects_with_nans(self, df):
         return df[~df.isna().any(axis=1)]
@@ -134,10 +139,12 @@ class ComBat(BaseEstimator, TransformerMixin):
 
         """
         self._check_data(df)
-        df = self._label_encode_covars(df)
+        self.encoders = label_encode_covars(df, self.covars)
         df = self._exclude_single_subject_groups(df)
         df = self._exclude_subjects_with_nans(df)
-        return self._run_combat(df)
+        self.harmonized_ = self._run_combat(df)
+        label_decode_covars(self.harmonized_, self.covars, self.encoders)
+        return self.harmonized_
 
     def fit(self, df):
         """Fit the model.
@@ -245,6 +252,18 @@ class Neuroharmony(BaseEstimator, TransformerMixin):
         self.scaler.set_params(**scaler_args)
         self.pipeline_args = pipeline_args
 
+    def _check_vars(self, df, vars):
+        vars = Series(vars)
+        is_feature_present = vars.isin(df.columns)
+        missing_features_str = "Missing features: %s" % ', '.join(vars[~is_feature_present])
+        assert is_feature_present.all(), ValueError(missing_features_str)
+
+    def _check_data(self, df):
+        type_error = "Input data should be a pandas dataframe (NDFrame)."
+        assert isinstance(df, NDFrame), TypeError(type_error)
+        self._check_vars(df, self.features)
+        self._check_vars(df, self.covars)
+
     def _random_search_with_leave_one_group_out_cv(self, X, y, groups):
         self.leaveonegroupout_ = LeaveOneGroupOut()
         self.cv = list(self.leaveonegroupout_.split(X, y, groups))
@@ -261,17 +280,10 @@ class Neuroharmony(BaseEstimator, TransformerMixin):
         self.randomized_search_cv.fit(X, y)
         return self.randomized_search_cv
 
-    def _label_encode_covars(self, df):
-        self.encoders = {}
-        for covar in self.covars:
-            self.encoders[covar] = LabelEncoder()
-            df[covar] = self.encoders[covar].fit_transform(df[covar])
-        return df
-
-    def _label_dencode_covars(self, df):
-        for covar in self.covars:
-            df[covar] = self.encoders[covar].inverse_transform(df[covar])
-        return df
+    def _reconstruct_original_fieds(self, df, harmonized, extra_vars):
+        """Concatenate ComBat data with the original data fields."""
+        harmonized = DataFrame(harmonized, index=df.index, columns=self.features)
+        return concat([harmonized, df.loc[harmonized.index][extra_vars]], axis=1, sort=True)
 
     def _train_neurofind(self, estimator=RandomForestRegressor()):
         name = estimator.__class__.__name__
@@ -280,6 +292,7 @@ class Neuroharmony(BaseEstimator, TransformerMixin):
         self.extra_vars = df.columns[~df.columns.isin(self.features)]
         combat = ComBat(self.features, self.covars)
         self.X_harmonized_ = combat.transform(df)
+        label_decode_covars(self.X_harmonized_, self.covars, self.encoders)
         delta = df[self.features] - self.X_harmonized_[self.features]
         y_train_split = concat([delta, df[self.extra_vars]], axis=1, sort=False).dropna()
         X_train_split = df.loc[y_train_split.index]
@@ -302,7 +315,8 @@ class Neuroharmony(BaseEstimator, TransformerMixin):
          This estimator
 
         """
-        df = self._label_encode_covars(df)
+        self._check_data(df)
+        self.encoders = label_encode_covars(df, self.covars)
         X_train_split, y_train_split = self._run_combat(df)
         self.models_by_feature_ = {}
         desc = 'Randomized search of %s, ROIs regression' % self.estimator.__class__.__name__
@@ -330,5 +344,32 @@ class Neuroharmony(BaseEstimator, TransformerMixin):
          Transformed array.
 
         """
+        self._check_data(df)
         self.fit(df)
         return self.X_harmonized_
+
+    def predict(self, df):
+        """Predict regression target for df.
+
+        The predicted regression target of an input sample is computed as the
+        mean predicted regression targets of the trees in the forest.
+        Parameters
+        ----------
+        df : NDFrame [n_samples, n_features]
+            Pandas dataframe with features, regression_features and covars.
+        Returns
+        -------
+        y : NDFrame [n_samples, n_features]
+            Data harmonized with Neuroharmony.
+
+        """
+        # Check data
+        self._check_data(df)
+        self.models_by_feature_[self.features[0]]._check_is_fitted('predict')
+        self.predicted_ = DataFrame([], columns=self.features, index=df.index)
+        for var in self.features:
+            predicted_y_1 = self.models_by_feature_[var].predict(
+                df[self.regression_features + [var]])
+            self.predicted_[var] = df[var] - predicted_y_1
+        self.predicted_ = self._reconstruct_original_fieds(df, self.predicted_, self.extra_vars)
+        return self.predicted_

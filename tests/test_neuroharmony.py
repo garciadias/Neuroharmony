@@ -8,9 +8,10 @@ import pytest
 from scipy.special import comb
 from sklearn.base import BaseEstimator
 from sklearn.utils.estimator_checks import check_transformer_general
+from numpy import int64, int32
 
 from src.data.combine_tools import DataSet
-from src.models.harmonization import ComBat, Neuroharmony
+from src.models.harmonization import ComBat, Neuroharmony, label_encode_covars, label_decode_covars
 from src.models.metrics import ks_test_grid
 from src.data.rois import rois
 
@@ -34,18 +35,82 @@ def resources(tmpdir_factory):
     r.regression_features = ['Age', 'summary_gm_median', 'spacing_x', 'summary_gm_p95',
                              'cnr', 'size_x', 'cjv', 'summary_wm_mean', 'icvs_gm', 'wm2max']
     r.covars = ['Gender', 'scanner', 'Age']
-    original_data = DataSet(Path(r.data_path)).data
-    original_data.Age = original_data.Age.astype(int)
-    scanners = original_data.scanner.unique()
-    train_bool = original_data.scanner.isin(scanners[1:])
-    test_bool = original_data.scanner.isin(scanners[:1])
-    r.X_train_split = original_data[train_bool]
-    r.X_test_split = original_data[test_bool]
-    r.n_scanners = len(original_data.scanner.unique())
+    r.original_data = DataSet(Path(r.data_path)).data
+    r.original_data.Age = r.original_data.Age.astype(int)
+    scanners = r.original_data.scanner.unique()
+    train_bool = r.original_data.scanner.isin(scanners[1:])
+    test_bool = r.original_data.scanner.isin(scanners[:1])
+    r.X_train_split = r.original_data[train_bool]
+    r.X_test_split = r.original_data[test_bool]
+    r.n_scanners = len(r.original_data.scanner.unique())
     return r
 
 
-def test_neuroharmony_is_functional(resources):
+def test_label_encode_decode(resources):
+    """Test encoder and decoder."""
+    encoders = label_encode_covars(resources.X_train_split, resources.covars)
+    assert all([isinstance(value, int) for value in resources.X_train_split.scanner])
+    label_decode_covars(resources.X_train_split, resources.covars, encoders)
+    assert all([isinstance(value, str) for value in resources.X_train_split.scanner])
+
+
+# def test_neuroharmony_fits(resources):
+#     """Test Neuroharmony."""
+#     x_train, x_test = resources.X_train_split, resources.X_test_split
+#     neuroharmony = Neuroharmony(resources.features,
+#                                 resources.regression_features,
+#                                 resources.covars,
+#                                 param_distributions=dict(
+#                                     RandomForestRegressor__n_estimators=[5, 10, 15, 20],
+#                                     RandomForestRegressor__random_state=[42, 78],
+#                                     RandomForestRegressor__warm_start=[False, True],
+#                                 ),
+#                                 estimator_args=dict(n_jobs=1, random_state=42),
+#                                 randomized_search_args=dict(cv=5, n_jobs=27))
+#     x_harmonized = neuroharmony.fit_transform(x_train)
+#     assert isinstance(x_harmonized, NDFrame)
+#     assert isinstance(neuroharmony, BaseEstimator)
+#
+#
+# def test_neuroharmony_predictis(resources):
+#     """Test Neuroharmony."""
+#     x_train, x_test = resources.X_train_split, resources.X_test_split
+#     neuroharmony = Neuroharmony(resources.features,
+#                                 resources.regression_features,
+#                                 resources.covars,
+#                                 param_distributions=dict(
+#                                     RandomForestRegressor__n_estimators=[5, 10, 15, 20],
+#                                     RandomForestRegressor__random_state=[42, 78],
+#                                     RandomForestRegressor__warm_start=[False, True],
+#                                 ),
+#                                 estimator_args=dict(n_jobs=1, random_state=42),
+#                                 randomized_search_args=dict(cv=5, n_jobs=27))
+#     neuroharmony.fit(x_train)
+#     x_test = neuroharmony.predict(x_test)
+#     assert isinstance(x_test, NDFrame)
+#     assert isinstance(neuroharmony, BaseEstimator)
+#
+#
+# def test_neuroharmony_fits_and_predictis(resources):
+#     """Test Neuroharmony."""
+#     x_train, x_test = resources.X_train_split, resources.X_test_split
+#     neuroharmony = Neuroharmony(resources.features,
+#                                 resources.regression_features,
+#                                 resources.covars,
+#                                 param_distributions=dict(
+#                                     RandomForestRegressor__n_estimators=[5, 10, 15, 20],
+#                                     RandomForestRegressor__random_state=[42, 78],
+#                                     RandomForestRegressor__warm_start=[False, True],
+#                                 ),
+#                                 estimator_args=dict(n_jobs=1, random_state=42),
+#                                 randomized_search_args=dict(cv=5, n_jobs=27))
+#     neuroharmony.fit(x_train)
+#     x_test = neuroharmony.predict(x_test)
+#     assert isinstance(x_test, NDFrame)
+#     assert isinstance(neuroharmony, BaseEstimator)
+
+
+def test_neuroharmony_works(resources):
     """Test Neuroharmony."""
     x_train, x_test = resources.X_train_split, resources.X_test_split
     neuroharmony = Neuroharmony(resources.features,
@@ -57,7 +122,19 @@ def test_neuroharmony_is_functional(resources):
                                     RandomForestRegressor__warm_start=[False, True],
                                 ),
                                 estimator_args=dict(n_jobs=1, random_state=42),
-                                randomized_search_args=dict(cv=5, n_jobs=27, iid=False))
-    x_harmonized = neuroharmony.fit_transform(x_train)
-    assert isinstance(x_harmonized, NDFrame)
+                                randomized_search_args=dict(cv=5, n_jobs=27))
+    x_train_harmonized = neuroharmony.fit_transform(x_train)
+    x_test_harmonized = neuroharmony.predict(x_test)
+    data_harmonized = concat([x_train_harmonized, x_test_harmonized], sort=False)
+    KS_original = ks_test_grid(resources.original_data, resources.features, 'scanner')
+    KS_harmonized = ks_test_grid(data_harmonized, resources.features, 'scanner')
+    assert KS_original[resources.features[0]].shape == (resources.n_scanners,
+                                                        resources.n_scanners)
+    assert KS_harmonized[resources.features[0]].shape == (resources.n_scanners,
+                                                          resources.n_scanners)
+    print(KS_original.keys())
+    print(KS_harmonized.keys())
+    assert isinstance(x_test, NDFrame)
     assert isinstance(neuroharmony, BaseEstimator)
+    print(compare_dfs(KS_original, KS_harmonized) == comb(resources.n_scanners, 2))
+    # assert (compare_dfs(KS_original, KS_harmonized) == comb(resources.n_scanners, 2)).all()
