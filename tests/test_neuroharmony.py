@@ -1,4 +1,4 @@
-"""Tests for harmonization with Combat."""
+"""Tests for harmonization with Neuroharmony."""
 from collections import namedtuple
 
 from pandas.core.generic import NDFrame
@@ -14,16 +14,6 @@ from src.data.combine_tools import DataSet
 from src.models.harmonization import ComBat, Neuroharmony, label_encode_covars, label_decode_covars
 from src.models.metrics import ks_test_grid
 from src.data.rois import rois
-
-
-def compare_dfs(ks_original, ks_harmonized):
-    """Compare two dictionaries of dataframes to measure the success of harmonization."""
-    vars = ks_original.keys()
-    var_improved = Series(index=vars, dtype='bool')
-    for var in vars:
-        improved = ks_original[var] < ks_harmonized[var]
-        var_improved.loc[var] = improved.sum().sum()
-    return var_improved
 
 
 @pytest.fixture(scope='session')

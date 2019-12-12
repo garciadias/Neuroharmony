@@ -1,4 +1,4 @@
-"""Define combining tools."""
+"""Combining tools."""
 from pathlib import Path
 import warnings
 
