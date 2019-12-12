@@ -54,63 +54,7 @@ def test_label_encode_decode(resources):
     assert all([isinstance(value, str) for value in resources.X_train_split.scanner])
 
 
-# def test_neuroharmony_fits(resources):
-#     """Test Neuroharmony."""
-#     x_train, x_test = resources.X_train_split, resources.X_test_split
-#     neuroharmony = Neuroharmony(resources.features,
-#                                 resources.regression_features,
-#                                 resources.covars,
-#                                 param_distributions=dict(
-#                                     RandomForestRegressor__n_estimators=[5, 10, 15, 20],
-#                                     RandomForestRegressor__random_state=[42, 78],
-#                                     RandomForestRegressor__warm_start=[False, True],
-#                                 ),
-#                                 estimator_args=dict(n_jobs=1, random_state=42),
-#                                 randomized_search_args=dict(cv=5, n_jobs=27))
-#     x_harmonized = neuroharmony.fit_transform(x_train)
-#     assert isinstance(x_harmonized, NDFrame)
-#     assert isinstance(neuroharmony, BaseEstimator)
-#
-#
-# def test_neuroharmony_predictis(resources):
-#     """Test Neuroharmony."""
-#     x_train, x_test = resources.X_train_split, resources.X_test_split
-#     neuroharmony = Neuroharmony(resources.features,
-#                                 resources.regression_features,
-#                                 resources.covars,
-#                                 param_distributions=dict(
-#                                     RandomForestRegressor__n_estimators=[5, 10, 15, 20],
-#                                     RandomForestRegressor__random_state=[42, 78],
-#                                     RandomForestRegressor__warm_start=[False, True],
-#                                 ),
-#                                 estimator_args=dict(n_jobs=1, random_state=42),
-#                                 randomized_search_args=dict(cv=5, n_jobs=27))
-#     neuroharmony.fit(x_train)
-#     x_test = neuroharmony.predict(x_test)
-#     assert isinstance(x_test, NDFrame)
-#     assert isinstance(neuroharmony, BaseEstimator)
-#
-#
-# def test_neuroharmony_fits_and_predictis(resources):
-#     """Test Neuroharmony."""
-#     x_train, x_test = resources.X_train_split, resources.X_test_split
-#     neuroharmony = Neuroharmony(resources.features,
-#                                 resources.regression_features,
-#                                 resources.covars,
-#                                 param_distributions=dict(
-#                                     RandomForestRegressor__n_estimators=[5, 10, 15, 20],
-#                                     RandomForestRegressor__random_state=[42, 78],
-#                                     RandomForestRegressor__warm_start=[False, True],
-#                                 ),
-#                                 estimator_args=dict(n_jobs=1, random_state=42),
-#                                 randomized_search_args=dict(cv=5, n_jobs=27))
-#     neuroharmony.fit(x_train)
-#     x_test = neuroharmony.predict(x_test)
-#     assert isinstance(x_test, NDFrame)
-#     assert isinstance(neuroharmony, BaseEstimator)
-
-
-def test_neuroharmony_works(resources):
+def test_neuroharmony_behaviour(resources):
     """Test Neuroharmony."""
     x_train, x_test = resources.X_train_split, resources.X_test_split
     neuroharmony = Neuroharmony(resources.features,
@@ -132,9 +76,5 @@ def test_neuroharmony_works(resources):
                                                         resources.n_scanners)
     assert KS_harmonized[resources.features[0]].shape == (resources.n_scanners,
                                                           resources.n_scanners)
-    print(KS_original.keys())
-    print(KS_harmonized.keys())
     assert isinstance(x_test, NDFrame)
     assert isinstance(neuroharmony, BaseEstimator)
-    print(compare_dfs(KS_original, KS_harmonized) == comb(resources.n_scanners, 2))
-    # assert (compare_dfs(KS_original, KS_harmonized) == comb(resources.n_scanners, 2)).all()

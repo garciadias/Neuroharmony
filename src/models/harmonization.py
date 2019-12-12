@@ -234,6 +234,7 @@ class Neuroharmony(BaseEstimator, TransformerMixin):
                  estimator=RandomForestRegressor(),
                  scaler=RobustScaler(),
                  param_distributions=dict(RandomForestRegressor__n_estimators=[100, 200, 500],
+                                          RandomForestRegressor__criterion=['mse', 'mae'],
                                           RandomForestRegressor__warm_start=[False, True], ),
                  estimator_args=dict(n_jobs=1, random_state=42, criterion='mae', verbose=False),
                  scaler_args=dict(),
@@ -341,7 +342,7 @@ class Neuroharmony(BaseEstimator, TransformerMixin):
         Returns
         -------
         harmonized_: NDFrame, of shape [n_samples, n_features_new]
-         Transformed array.
+         Data harmonized with ComBat.
 
         """
         self._check_data(df)
