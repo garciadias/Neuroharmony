@@ -16,7 +16,7 @@ from sklearn.utils.validation import check_is_fitted
 from sklearn import ensemble
 from tqdm import tqdm
 
-from src.data.rois import rois
+from neuroharmony.data.rois import rois
 
 
 def supress_print(func):

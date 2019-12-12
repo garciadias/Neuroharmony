@@ -7,10 +7,10 @@ from pathlib import Path, PosixPath
 import pytest
 from scipy.special import comb
 
-from src.data.combine_tools import DataSet
-from src.models.harmonization import ComBat
-from src.models.metrics import ks_test_grid
-from src.data.rois import rois
+from neuroharmony.data.combine_tools import DataSet
+from neuroharmony.models.harmonization import ComBat
+from neuroharmony.models.metrics import ks_test_grid
+from neuroharmony.data.rois import rois
 
 
 def compare_dfs(ks_original, ks_harmonized):

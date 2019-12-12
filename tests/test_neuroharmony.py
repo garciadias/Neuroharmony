@@ -10,10 +10,10 @@ from sklearn.base import BaseEstimator
 from sklearn.utils.estimator_checks import check_transformer_general
 from numpy import int64, int32
 
-from src.data.combine_tools import DataSet
-from src.models.harmonization import ComBat, Neuroharmony, label_encode_covars, label_decode_covars
-from src.models.metrics import ks_test_grid
-from src.data.rois import rois
+from neuroharmony.data.combine_tools import DataSet
+from neuroharmony.models.harmonization import ComBat, Neuroharmony, label_encode_covars, label_decode_covars
+from neuroharmony.models.metrics import ks_test_grid
+from neuroharmony.data.rois import rois
 
 
 @pytest.fixture(scope='session')

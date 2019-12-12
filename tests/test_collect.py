@@ -5,7 +5,7 @@ from os import popen
 
 import pytest
 
-from src.data import collect_tools
+from neuroharmony.data import collect_tools
 
 
 @pytest.fixture(scope='session')

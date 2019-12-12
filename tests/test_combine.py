@@ -5,7 +5,7 @@ from pandas.core.generic import NDFrame
 from pathlib import Path, PosixPath
 import pytest
 
-from src.data import combine_tools, collect_tools
+from neuroharmony.data import combine_tools, collect_tools
 
 
 @pytest.fixture(scope='session')
