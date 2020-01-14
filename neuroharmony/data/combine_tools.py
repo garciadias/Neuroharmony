@@ -1,11 +1,11 @@
-"""Define combining tools."""
+"""Combining tools."""
 from pathlib import Path
 import warnings
 
 import pandas as pd
 
-from src.data.collect_tools import find_all_files_by_name
-from src.data.rois import rois
+from neuroharmony.data.collect_tools import find_all_files_by_name
+from neuroharmony.data.rois import rois
 
 
 class Site(object):

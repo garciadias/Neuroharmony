@@ -1,4 +1,4 @@
-
+"""Collect tools."""
 from pathlib import Path
 from shutil import copyfile
 

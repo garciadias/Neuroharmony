@@ -51,10 +51,15 @@ def ks_test_grid(df, features, sampling_variable='scanner'):
     >>> features = ['Left-Lateral-Ventricle', 'Left-Inf-Lat-Vent', ]
     >>> KS = ks_test_grid(df, features, 'scanner')
     >>> KS[features[0]]
-                                SCANNER01-SCANNER01    SCANNER02-SCANNER01      SCANNER03-SCANNER01
-    SCANNER01-SCANNER01         NaN                    NaN                      NaN
-    SCANNER02-SCANNER01         0.000759473            NaN                      NaN
-    SCANNER03-SCANNER01         0.0539998              0.625887                 NaN
+    +--------------------------+----------------------+------------------------+--------------------+
+    |                          | SCANNER01-SCANNER01  | SCANNER02-SCANNER01    | SCANNER03-SCANNER01|
+    +==========================++=====================+========================+====================+
+    |SCANNER01-SCANNER01       | NaN                  | NaN                    | NaN                |
+    +--------------------------+----------------------+------------------------+--------------------+
+    |SCANNER02-SCANNER01       | 0.000759473          | NaN                    | NaN                |
+    +--------------------------+----------------------+------------------------+--------------------+
+    |SCANNER03-SCANNER01       | 0.0539998            | 0.625887               | NaN                |
+    +--------------------------+----------------------+------------------------+--------------------+
 
     """
     check_vars(df, features)

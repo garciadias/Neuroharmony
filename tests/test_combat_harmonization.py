@@ -7,10 +7,10 @@ from pathlib import Path, PosixPath
 import pytest
 from scipy.special import comb
 
-from src.data.combine_tools import DataSet
-from src.models.harmonization import ComBat
-from src.models.metrics import ks_test_grid
-from src.data.rois import rois
+from neuroharmony.data.combine_tools import DataSet
+from neuroharmony.models.harmonization import ComBat
+from neuroharmony.models.metrics import ks_test_grid
+from neuroharmony.data.rois import rois
 
 
 def compare_dfs(ks_original, ks_harmonized):
@@ -24,7 +24,7 @@ def compare_dfs(ks_original, ks_harmonized):
 
 
 @pytest.fixture(scope='session')
-def resouces(tmpdir_factory):
+def resources(tmpdir_factory):
     """Set up."""
     r = namedtuple('resources', 'data_path')
     r.data_path = 'data/raw/IXI'
@@ -36,22 +36,23 @@ def resouces(tmpdir_factory):
     return r
 
 
-def test_combat_is_functional(resouces):
+def test_combat_is_functional(resources):
     """Test ComBat harmonization returns a NDFrame with no NaN values and conserves scanner column format."""
-    combat = ComBat(resouces.features, resouces.covars)
-    data_harmonized = combat.transform(resouces.data[resouces.features + resouces.covars])
+    combat = ComBat(resources.features, resources.covars)
+    data_harmonized = combat.transform(resources.data[resources.features + resources.covars])
     assert isinstance(data_harmonized, NDFrame)
     assert not data_harmonized.isna().any(axis=1).any()
     assert isinstance(data_harmonized.scanner[0], str)
 
 
-def test_harmonization_works(resouces):
+def test_harmonization_works(resources):
     """Test harmonization with ComBat using the Kolmogorov-Smirnov test."""
-    combat = ComBat(resouces.features, resouces.covars)
-    data_harmonized = combat.transform(resouces.data[resouces.features + resouces.covars])
-    KS_original = ks_test_grid(resouces.data, resouces.features, 'scanner')
-    KS_harmonized = ks_test_grid(data_harmonized, resouces.features, 'scanner')
+    combat = ComBat(resources.features, resources.covars)
+    data_harmonized = combat.transform(resources.data[resources.features + resources.covars])
+    KS_original = ks_test_grid(resources.data, resources.features, 'scanner')
+    KS_harmonized = ks_test_grid(data_harmonized, resources.features, 'scanner')
     assert isinstance(KS_harmonized, dict)
-    assert isinstance(KS_harmonized[resouces.features[0]], NDFrame)
-    assert KS_harmonized[resouces.features[0]].shape == (resouces.n_scanners, resouces.n_scanners)
-    assert (compare_dfs(KS_original, KS_harmonized) == comb(resouces.n_scanners, 2)).all()
+    assert isinstance(KS_harmonized[resources.features[0]], NDFrame)
+    assert KS_harmonized[resources.features[0]].shape == (
+        resources.n_scanners, resources.n_scanners)
+    assert (compare_dfs(KS_original, KS_harmonized) == comb(resources.n_scanners, 2)).all()
