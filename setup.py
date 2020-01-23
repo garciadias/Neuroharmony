@@ -22,7 +22,7 @@ setup(
     author_email='rafaelagd@gmail.com',
     url='https://github.com/garciadias/outTool_trainning',
     packages=[
-        'neuroharmony',
+        'neuroharmony', 'neuroharmony.models', 'neuroharmony.data'
     ],
     package_dir={'neuroharmony': 'neuroharmony'},
     include_package_data=True,
