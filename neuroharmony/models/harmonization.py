@@ -53,16 +53,18 @@ def combat(*args, **kwargs):
 class ComBat(BaseEstimator, TransformerMixin):
     """ComBat class."""
 
-    def __init__(self, features, covars):
+    def __init__(self, features, covars, eliminate_variance):
         """Init class with the original data."""
         self.features = features
         self.covars = covars
+        self.eliminate_variance = eliminate_variance
 
     def _check_data(self, df):
         type_error = "Input data should be a pandas dataframe (NDFrame)."
         assert isinstance(df, NDFrame), TypeError(type_error)
         self._check_vars(df, self.features)
         self._check_vars(df, self.covars)
+        self._check_vars(df, self.eliminate_variance)
 
     def _check_vars(self, df, vars):
         vars = Series(vars)
@@ -90,7 +92,7 @@ class ComBat(BaseEstimator, TransformerMixin):
         """Run ComBat for all covars."""
         extra_vars = df.columns[~df.columns.isin(self.features)]
         harmonized = df.copy()
-        for batch_col in self.covars:
+        for batch_col in self.eliminate_variance:
             harmonized = combat(data=harmonized[self.features],
                                 covars=harmonized[self.covars],
                                 batch_col=batch_col, )
@@ -231,6 +233,7 @@ class Neuroharmony(BaseEstimator, TransformerMixin):
                  features,
                  regression_features,
                  covars,
+                 eliminate_variance,
                  estimator=RandomForestRegressor(),
                  scaler=RobustScaler(),
                  param_distributions=dict(RandomForestRegressor__n_estimators=[100, 200, 500],
@@ -245,6 +248,7 @@ class Neuroharmony(BaseEstimator, TransformerMixin):
         self.features = features
         self.regression_features = regression_features
         self.covars = covars
+        self.eliminate_variance = eliminate_variance
         self.estimator = estimator
         self.scaler = scaler
         self.param_distributions = param_distributions
@@ -264,6 +268,7 @@ class Neuroharmony(BaseEstimator, TransformerMixin):
         assert isinstance(df, NDFrame), TypeError(type_error)
         self._check_vars(df, self.features)
         self._check_vars(df, self.covars)
+        self._check_vars(df, self.eliminate_variance)
 
     def _random_search_with_leave_one_group_out_cv(self, X, y, groups):
         self.leaveonegroupout_ = LeaveOneGroupOut()
@@ -291,7 +296,7 @@ class Neuroharmony(BaseEstimator, TransformerMixin):
 
     def _run_combat(self, df):
         self.extra_vars = df.columns[~df.columns.isin(self.features)]
-        combat = ComBat(self.features, self.covars)
+        combat = ComBat(self.features, self.covars, self.eliminate_variance)
         self.X_harmonized_ = combat.transform(df)
         label_decode_covars(self.X_harmonized_, self.covars, self.encoders)
         delta = df[self.features] - self.X_harmonized_[self.features]
