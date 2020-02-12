@@ -25,6 +25,7 @@ def resources(tmpdir_factory):
     r.regression_features = ['Age', 'summary_gm_median', 'spacing_x', 'summary_gm_p95',
                              'cnr', 'size_x', 'cjv', 'summary_wm_mean', 'icvs_gm', 'wm2max']
     r.covars = ['Gender', 'scanner', 'Age']
+    r.eliminate_variance = ['scanner']
     r.original_data = DataSet(Path(r.data_path)).data
     r.original_data.Age = r.original_data.Age.astype(int)
     scanners = r.original_data.scanner.unique()
@@ -50,6 +51,7 @@ def test_neuroharmony_behaviour(resources):
     neuroharmony = Neuroharmony(resources.features,
                                 resources.regression_features,
                                 resources.covars,
+                                resources.eliminate_variance,
                                 param_distributions=dict(
                                     RandomForestRegressor__n_estimators=[5, 10, 15, 20],
                                     RandomForestRegressor__random_state=[42, 78],
