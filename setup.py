@@ -15,8 +15,8 @@ test_requirements = [
 
 setup(
     name='Neuroharmony',
-    version='0.0.0',
-    description="A tool to perform Freesurfer volume Harminization.",
+    version='0.0',
+    description="A tool to perform Freesurfer volume Harminization in unseen scanner.",
     long_description=readme,
     author="Rafael Garcia-Dias",
     author_email='rafaelagd@gmail.com',
