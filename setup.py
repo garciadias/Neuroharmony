@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from setuptools import setup
-
+from os import system
 with open('README.md') as readme_file:
     readme = readme_file.read()
 
@@ -20,7 +20,7 @@ setup(
     long_description=readme,
     author="Rafael Garcia-Dias",
     author_email='rafaelagd@gmail.com',
-    url='https://github.com/garciadias/outTool_trainning',
+    url='https://github.com/garciadias/Neuroharmony',
     packages=[
         'neuroharmony', 'neuroharmony.models', 'neuroharmony.data'
     ],
@@ -29,7 +29,7 @@ setup(
     install_requires=requirements,
     license="MIT license",
     zip_safe=False,
-    keywords='ethical, data science',
+    keywords='Harminization, MRI, data science',
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'Intended Audience :: Developers',
@@ -42,5 +42,7 @@ setup(
         'Programming Language :: Python :: 3.6',
     ],
     test_suite='tests',
-    tests_requires=test_requirements
+    tests_requires=test_requirements,
 )
+
+system('pip install git+https://github.com/ncullen93/neuroCombat')

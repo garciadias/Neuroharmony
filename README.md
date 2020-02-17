@@ -54,7 +54,7 @@ harmony = Neuroharmony(features,
 # Fit the model.
 x_train_harmonized = harmony.fit_transform(x_train)
 # Predict correction to unseen data.
-x_test_harmonized = harmony.predict(x_test)
+x_test_harmonized = harmony.transform(x_test)
 # Compose a NDFrame with all the data.
 data_harmonized = concat([x_train_harmonized, x_test_harmonized], sort=False)
 # Use Kolmogorov-Smirnov test to stablish if the differences between scanners were indeed eliminated.

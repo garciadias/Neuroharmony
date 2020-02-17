@@ -379,3 +379,6 @@ class Neuroharmony(BaseEstimator, TransformerMixin):
             self.predicted_[var] = df[var] - predicted_y_1
         self.predicted_ = self._reconstruct_original_fieds(df, self.predicted_, self.extra_vars)
         return self.predicted_
+
+        def transform(self, df):
+            return predict(df)
