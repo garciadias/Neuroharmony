@@ -14,7 +14,7 @@ test_requirements = [
 ]
 
 setup(
-    name='Train Harminization tool',
+    name='Neuroharmony',
     version='0.0.0',
     description="A tool to perform Freesurfer volume Harminization.",
     long_description=readme,
