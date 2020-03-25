@@ -2,16 +2,13 @@
 from collections import namedtuple
 
 from pandas.core.generic import NDFrame
-from pandas import Series, concat
-from pathlib import Path, PosixPath
+from pandas import concat
+from pathlib import Path
 import pytest
-from scipy.special import comb
 from sklearn.base import BaseEstimator
-from sklearn.utils.estimator_checks import check_transformer_general
-from numpy import int64, int32
 
 from neuroharmony.data.combine_tools import DataSet
-from neuroharmony.models.harmonization import ComBat, Neuroharmony, label_encode_covars, label_decode_covars
+from neuroharmony.models.harmonization import Neuroharmony, label_encode_covars, label_decode_covars
 from neuroharmony.models.metrics import ks_test_grid
 from neuroharmony.data.rois import rois
 
