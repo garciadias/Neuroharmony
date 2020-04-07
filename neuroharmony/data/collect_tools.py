@@ -64,7 +64,7 @@ def collect_multiple_datafile(filepath_list, root_path, local_path):
 
     Parameters
     ----------
-    filepath_list: list of sring or pathlib.PosixPath
+    filepath_list: list of strings or pathlib.PosixPath
         List of paths for the file to be copied.
 
     root_path: string
@@ -84,7 +84,7 @@ def collect_multiple_datafile(filepath_list, root_path, local_path):
 
 
 if __name__ == '__main__':
-    SERVER_ROOT = '/run/user/1000/gvfs/smb-share:server=kc-deeplab.local,share=deeplearning'
+    SERVER_ROOT = '/media/d/My Passport/SynologyDrive'
     PARTICIPANT_ROOT = '%s/BIDS_data/' % SERVER_ROOT
     FREESURFER_ROOT = '%s/FreeSurfer_preprocessed/' % SERVER_ROOT
     QOALA_ROOT = '%s/Qoala/' % SERVER_ROOT

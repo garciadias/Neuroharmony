@@ -27,7 +27,7 @@ def test_get_scanners(resources):
 def test_get_files(resources):
     """Test we can get the files for each scanner."""
     site = combine_tools.Site(Path('data/raw/COBRE'))
-    assert isinstance(site.freesurferData_path, PosixPath)
+    assert isinstance(site.SCANNER01.freesurferData_path, PosixPath)
     site = combine_tools.Site(Path('data/raw/IXI'))
     assert isinstance(site.SCANNER01.freesurferData_path, PosixPath)
     assert isinstance(site.SCANNER01.participants_path, PosixPath)
@@ -39,11 +39,11 @@ def test_get_files(resources):
 def test_load_files():
     """Test the files exist and can be open as NDFrames."""
     site = combine_tools.Site(Path('data/raw/COBRE'))
-    assert isinstance(site.freesurferData, NDFrame)
-    assert isinstance(site.participants, NDFrame)
-    assert isinstance(site.iqm, NDFrame)
-    assert isinstance(site.pred, NDFrame)
-    assert isinstance(site.qoala, NDFrame)
+    assert isinstance(site.SCANNER01.freesurferData, NDFrame)
+    assert isinstance(site.SCANNER01.participants, NDFrame)
+    assert isinstance(site.SCANNER01.iqm, NDFrame)
+    assert isinstance(site.SCANNER01.pred, NDFrame)
+    assert isinstance(site.SCANNER01.qoala, NDFrame)
 
 
 def test_combine_files():
