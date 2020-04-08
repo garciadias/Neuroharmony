@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""Setup python package."""
 
 from setuptools import setup
 from os import system
@@ -22,9 +23,13 @@ setup(
     author_email='rafaelagd@gmail.com',
     url='https://github.com/garciadias/Neuroharmony',
     packages=[
-        'neuroharmony', 'neuroharmony.models', 'neuroharmony.data'
+        'neuroharmony',
+        'neuroharmony.data',
+        'neuroharmony.models',
     ],
-    package_dir={'neuroharmony': 'neuroharmony'},
+    package_dir={
+        'neuroharmony': 'neuroharmony',
+    },
     include_package_data=True,
     install_requires=requirements,
     license="MIT license",

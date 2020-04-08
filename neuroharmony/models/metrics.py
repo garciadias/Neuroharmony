@@ -3,8 +3,6 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         with_statement, print_function, unicode_literals)
 
 from itertools import combinations
-import os
-import pickle
 
 import numpy as np
 from pandas import DataFrame, Series

@@ -3,7 +3,7 @@ from collections import namedtuple
 
 from pandas.core.generic import NDFrame
 from pandas import Series
-from pathlib import Path, PosixPath
+from pathlib import Path
 import pytest
 from scipy.special import comb
 

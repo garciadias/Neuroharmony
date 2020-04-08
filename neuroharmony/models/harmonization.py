@@ -4,7 +4,7 @@ import os
 import sys
 
 from neuroCombat import neuroCombat
-from numpy import unique, int32
+from numpy import unique
 from pandas import Series, DataFrame, concat
 from pandas.core.generic import NDFrame
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -12,11 +12,7 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import LeaveOneGroupOut, RandomizedSearchCV
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import LabelEncoder, RobustScaler
-from sklearn.utils.validation import check_is_fitted
-from sklearn import ensemble
 from tqdm import tqdm
-
-from neuroharmony.data.rois import rois
 
 
 def supress_print(func):
@@ -292,7 +288,7 @@ class Neuroharmony(BaseEstimator, TransformerMixin):
         return concat([harmonized, df.loc[harmonized.index][extra_vars]], axis=1, sort=True)
 
     def _train_neurofind(self, estimator=RandomForestRegressor()):
-        name = estimator.__class__.__name__
+        return estimator.__class__.__name__
 
     def _run_combat(self, df):
         self.extra_vars = df.columns[~df.columns.isin(self.features)]
@@ -381,4 +377,4 @@ class Neuroharmony(BaseEstimator, TransformerMixin):
         return self.predicted_
 
         def transform(self, df):
-            return predict(df)
+            return self.predict(df)
