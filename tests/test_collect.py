@@ -12,7 +12,7 @@ from neuroharmony.data import collect_tools
 def resources(tmpdir_factory):
     """Set up."""
     r = namedtuple('resources', 'server_root')
-    r.server_root = '/media/d/My Passport/SynologyDrive/'
+    r.server_root = '/media/kcl_2/HDD/SynologyDrive/'
     r.freesurfer_root = '%s/FreeSurfer_preprocessed/' % r.server_root
     r.bids_root = '%sBIDS_data/' % r.server_root
     r.fsurfer_root = '%sFreeSurfer_preprocessed/' % r.server_root
