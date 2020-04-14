@@ -31,7 +31,7 @@ def resources(tmpdir_factory):
     r.data = DataSet(Path(r.data_path)).data
     r.data.Age = r.data.Age.astype(int)
     r.features = rois[:3]
-    r.covars = ['Gender', 'scanner', 'Age']
+    r.covariates = ['Gender', 'scanner', 'Age']
     r.eliminate_variance = ['scanner']
     r.n_scanners = len(r.data.scanner.unique())
     return r
@@ -39,8 +39,8 @@ def resources(tmpdir_factory):
 
 def test_combat_is_functional(resources):
     """Test ComBat harmonization returns a NDFrame with no NaN values and conserves scanner column format."""
-    combat = ComBat(resources.features, resources.covars, resources.eliminate_variance)
-    data_harmonized = combat.transform(resources.data[resources.features + resources.covars])
+    combat = ComBat(resources.features, resources.covariates, resources.eliminate_variance)
+    data_harmonized = combat.transform(resources.data[resources.features + resources.covariates])
     assert isinstance(data_harmonized, NDFrame)
     assert not data_harmonized.isna().any(axis=1).any()
     assert isinstance(data_harmonized.scanner[0], str)
@@ -48,8 +48,8 @@ def test_combat_is_functional(resources):
 
 def test_harmonization_works(resources):
     """Test harmonization with ComBat using the Kolmogorov-Smirnov test."""
-    combat = ComBat(resources.features, resources.covars, resources.eliminate_variance)
-    data_harmonized = combat.transform(resources.data[resources.features + resources.covars])
+    combat = ComBat(resources.features, resources.covariates, resources.eliminate_variance)
+    data_harmonized = combat.transform(resources.data[resources.features + resources.covariates])
     KS_original = ks_test_grid(resources.data, resources.features, 'scanner')
     KS_harmonized = ks_test_grid(data_harmonized, resources.features, 'scanner')
     assert isinstance(KS_harmonized, dict)

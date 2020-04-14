@@ -8,7 +8,7 @@ import pytest
 from sklearn.base import BaseEstimator
 
 from neuroharmony.data.combine_tools import DataSet
-from neuroharmony.models.harmonization import Neuroharmony, label_encode_covars, label_decode_covars
+from neuroharmony.models.harmonization import Neuroharmony, label_encode_covariates, label_decode_covariates
 from neuroharmony.models.metrics import ks_test_grid
 from neuroharmony.data.rois import rois
 
@@ -21,7 +21,7 @@ def resources(tmpdir_factory):
     r.features = rois[:3]
     r.regression_features = ['Age', 'summary_gm_median', 'spacing_x', 'summary_gm_p95',
                              'cnr', 'size_x', 'cjv', 'summary_wm_mean', 'icvs_gm', 'wm2max']
-    r.covars = ['Gender', 'scanner', 'Age']
+    r.covariates = ['Gender', 'scanner', 'Age']
     r.eliminate_variance = ['scanner']
     r.original_data = DataSet(Path(r.data_path)).data
     r.original_data.Age = r.original_data.Age.astype(int)
@@ -36,9 +36,9 @@ def resources(tmpdir_factory):
 
 def test_label_encode_decode(resources):
     """Test encoder and decoder."""
-    encoders = label_encode_covars(resources.X_train_split, resources.covars)
+    encoders = label_encode_covariates(resources.X_train_split, resources.covariates)
     assert all([isinstance(value, int) for value in resources.X_train_split.scanner])
-    label_decode_covars(resources.X_train_split, resources.covars, encoders)
+    label_decode_covariates(resources.X_train_split, resources.covariates, encoders)
     assert all([isinstance(value, str) for value in resources.X_train_split.scanner])
 
 
@@ -47,7 +47,7 @@ def test_neuroharmony_behaviour(resources):
     x_train, x_test = resources.X_train_split, resources.X_test_split
     neuroharmony = Neuroharmony(resources.features,
                                 resources.regression_features,
-                                resources.covars,
+                                resources.covariates,
                                 resources.eliminate_variance,
                                 param_distributions=dict(
                                     RandomForestRegressor__n_estimators=[5, 10, 15, 20],

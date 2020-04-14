@@ -25,18 +25,18 @@ def supress_print(func):
     return wrapper
 
 
-def label_encode_covars(df, covars):
-    """Encode dataframe covars."""
+def label_encode_covariates(df, covariates):
+    """Encode dataframe covariates."""
     encoders = {}
-    for covar in covars:
+    for covar in covariates:
         encoders[covar] = LabelEncoder()
         df[covar] = encoders[covar].fit_transform(df[covar]).astype(int)
     return encoders
 
 
-def label_decode_covars(df, covars, encoders):
-    """Decode dataframe covars."""
-    for covar in covars:
+def label_decode_covariates(df, covariates, encoders):
+    """Decode dataframe covariates."""
+    for covar in covariates:
         df[covar] = encoders[covar].inverse_transform(df[covar])
 
 
@@ -49,17 +49,17 @@ def combat(*args, **kwargs):
 class ComBat(BaseEstimator, TransformerMixin):
     """ComBat class."""
 
-    def __init__(self, features, covars, eliminate_variance):
+    def __init__(self, features, covariates, eliminate_variance):
         """Initiate class with the original data."""
         self.features = features
-        self.covars = covars
+        self.covariates = covariates
         self.eliminate_variance = eliminate_variance
 
     def _check_data(self, df):
         type_error = "Input data should be a pandas dataframe (NDFrame)."
         assert isinstance(df, NDFrame), TypeError(type_error)
         self._check_vars(df, self.features)
-        self._check_vars(df, self.covars)
+        self._check_vars(df, self.covariates)
         self._check_vars(df, self.eliminate_variance)
 
     def _check_vars(self, df, vars):
@@ -75,7 +75,7 @@ class ComBat(BaseEstimator, TransformerMixin):
 
     def _exclude_single_subject_groups(self, df):
         """Exclude subjects with only a value in the variable field."""
-        for covar in self.covars:
+        for covar in self.covariates:
             instances, n = unique(df[covar], return_counts=True)
             category_counts = DataFrame(n, columns=['N'], index=instances)
             single_subj = category_counts[category_counts.N == 1].index.tolist()
@@ -85,12 +85,12 @@ class ComBat(BaseEstimator, TransformerMixin):
         return df
 
     def _run_combat(self, df):
-        """Run ComBat for all covars."""
+        """Run ComBat for all covariates."""
         extra_vars = df.columns[~df.columns.isin(self.features)]
         harmonized = df.copy()
         for batch_col in self.eliminate_variance:
             harmonized = combat(data=harmonized[self.features],
-                                covars=harmonized[self.covars],
+                                covariates=harmonized[self.covariates],
                                 batch_col=batch_col, )
             harmonized = self._reconstruct_original_fieds(df, harmonized, extra_vars)
         return harmonized
@@ -107,7 +107,7 @@ class ComBat(BaseEstimator, TransformerMixin):
         ----------
         df: NDFrame, of shape [n_subjects, n_features]
          Dataframe with data for each subject. The dataframe has to contain the features to be harmonized pandas
-         the covars which you want to use to harmonization.
+         the covariates which you want to use to harmonization.
 
         Returns
         -------
@@ -117,14 +117,14 @@ class ComBat(BaseEstimator, TransformerMixin):
         Raises
         ------
         ValueError:
-         If there are missing features among the covars or the features.
+         If there are missing features among the covariates or the features.
 
         Examples
         --------
         >>> ixi = DataSet('data/raw/IXI').data
         >>> features = ['Left-Lateral-Ventricle', 'Left-Inf-Lat-Vent', ]
-        >>> covars = ['Gender', 'Dataset', 'Age']
-        >>> combat = ComBat(features, covars)
+        >>> covariates = ['Gender', 'Dataset', 'Age']
+        >>> combat = ComBat(features, covariates)
         >>> harmonized = combat(ixi)
         >>> harmonized
 
@@ -138,11 +138,11 @@ class ComBat(BaseEstimator, TransformerMixin):
         """
         df = df.copy()
         self._check_data(df)
-        self.encoders = label_encode_covars(df, self.covars)
+        self.encoders = label_encode_covariates(df, self.covariates)
         df = self._exclude_single_subject_groups(df)
         df = self._exclude_subjects_with_nans(df)
         self.harmonized_ = self._run_combat(df)
-        label_decode_covars(self.harmonized_, self.covars, self.encoders)
+        label_decode_covariates(self.harmonized_, self.covariates, self.encoders)
         return self.harmonized_
 
     def fit(self, df):
@@ -195,7 +195,7 @@ class Neuroharmony(BaseEstimator, TransformerMixin):
      Target features to be harmonized, for example, ROIs.
     regression_features: list
      Features used to derive harmonization rules, for example, IQMs.
-    covars: list
+    covariates: list
      Variables for which we want to eliminate the bias, for example, age, sex, and scanner.
     estimator: sklearn estimator, default=RandomForestRegressor()
      Model to make the harmonization regression.
@@ -229,7 +229,7 @@ class Neuroharmony(BaseEstimator, TransformerMixin):
     def __init__(self,
                  features,
                  regression_features,
-                 covars,
+                 covariates,
                  eliminate_variance,
                  estimator=RandomForestRegressor(),
                  scaler=RobustScaler(),
@@ -244,7 +244,7 @@ class Neuroharmony(BaseEstimator, TransformerMixin):
         """Init."""
         self.features = features
         self.regression_features = regression_features
-        self.covars = covars
+        self.covariates = covariates
         self.eliminate_variance = eliminate_variance
         self.estimator = estimator
         self.scaler = scaler
@@ -264,7 +264,7 @@ class Neuroharmony(BaseEstimator, TransformerMixin):
         type_error = "Input data should be a pandas dataframe (NDFrame)."
         assert isinstance(df, NDFrame), TypeError(type_error)
         self._check_vars(df, self.features)
-        self._check_vars(df, self.covars)
+        self._check_vars(df, self.covariates)
         self._check_vars(df, self.eliminate_variance)
 
     def _random_search_with_leave_one_group_out_cv(self, X, y, groups):
@@ -293,9 +293,9 @@ class Neuroharmony(BaseEstimator, TransformerMixin):
 
     def _run_combat(self, df):
         self.extra_vars = df.columns[~df.columns.isin(self.features)]
-        combat = ComBat(self.features, self.covars, self.eliminate_variance)
+        combat = ComBat(self.features, self.covariates, self.eliminate_variance)
         self.X_harmonized_ = combat.transform(df)
-        label_decode_covars(self.X_harmonized_, self.covars, self.encoders)
+        label_decode_covariates(self.X_harmonized_, self.covariates, self.encoders)
         delta = df[self.features] - self.X_harmonized_[self.features]
         y_train_split = concat([delta, df[self.extra_vars]], axis=1, sort=False).dropna()
         X_train_split = df.loc[y_train_split.index]
@@ -319,7 +319,7 @@ class Neuroharmony(BaseEstimator, TransformerMixin):
 
         """
         self._check_data(df)
-        self.encoders = label_encode_covars(df, self.covars)
+        self.encoders = label_encode_covariates(df, self.covariates)
         X_train_split, y_train_split = self._run_combat(df)
         self.models_by_feature_ = {}
         desc = 'Randomized search of %s, ROIs regression' % self.estimator.__class__.__name__
@@ -359,7 +359,7 @@ class Neuroharmony(BaseEstimator, TransformerMixin):
         Parameters
         ----------
         df : NDFrame [n_samples, n_features]
-            Pandas dataframe with features, regression_features and covars.
+            Pandas dataframe with features, regression_features and covariates.
         Returns
         -------
         y : NDFrame [n_samples, n_features]

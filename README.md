@@ -25,7 +25,7 @@ data_path = 'data/raw/IXI'
 features = rois[:3]
 regression_features = ['Age', 'summary_gm_median', 'spacing_x', 'summary_gm_p95',
                          'cnr', 'size_x', 'cjv', 'summary_wm_mean', 'icvs_gm', 'wm2max']
-covars = ['Gender', 'scanner', 'Age', 'Diag']
+covariates = ['Gender', 'scanner', 'Age', 'Diag']
 eliminate_variance = ['scanner']
 original_data = DataSet(Path(data_path)).data
 original_data.Age = original_data.Age.astype(int)
@@ -42,7 +42,7 @@ x_train, x_test = X_train_split, X_test_split
 # Here you can establish the range of the hyperparameters random search or give specific values.
 harmony = Neuroharmony(features,
                             regression_features,
-                            covars,
+                            covariates,
                             eliminate_variance,
                             param_distributions=dict(
                                 RandomForestRegressor__n_estimators=[100, 200, 500],
