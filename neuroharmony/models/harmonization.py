@@ -16,7 +16,7 @@ from tqdm import tqdm
 
 
 def supress_print(func):
-    """Define decorator for print supression."""
+    """Define decorator for print suppression."""
     def wrapper(*args, **kwargs):
         sys.stdout = open(os.devnull, 'w')
         resuts = func(*args, **kwargs)
@@ -42,7 +42,7 @@ def label_decode_covars(df, covars, encoders):
 
 @supress_print
 def combat(*args, **kwargs):
-    """Redefine ComBat to supress printing unhrlpful data."""
+    """Redefine ComBat to suppress printing unhelpful data."""
     return neuroCombat(*args, **kwargs)
 
 
@@ -50,7 +50,7 @@ class ComBat(BaseEstimator, TransformerMixin):
     """ComBat class."""
 
     def __init__(self, features, covars, eliminate_variance):
-        """Init class with the original data."""
+        """Initiate class with the original data."""
         self.features = features
         self.covars = covars
         self.eliminate_variance = eliminate_variance
@@ -74,7 +74,7 @@ class ComBat(BaseEstimator, TransformerMixin):
         return concat([harmonized, df.loc[harmonized.index][extra_vars]], axis=1, sort=True)
 
     def _exclude_single_subject_groups(self, df):
-        """Exclude subjectis that are the only representants of a value in the variable field."""
+        """Exclude subjects with only a value in the variable field."""
         for covar in self.covars:
             instances, n = unique(df[covar], return_counts=True)
             category_counts = DataFrame(n, columns=['N'], index=instances)
@@ -136,6 +136,7 @@ class ComBat(BaseEstimator, TransformerMixin):
         sub-015-00-1  0.003310                0.000154           1       1        26
 
         """
+        df = df.copy()
         self._check_data(df)
         self.encoders = label_encode_covars(df, self.covars)
         df = self._exclude_single_subject_groups(df)
@@ -153,7 +154,7 @@ class ComBat(BaseEstimator, TransformerMixin):
         Parameters
         ----------
         df: NDFrame, of shape [n_subjects, n_features]
-         Training data. Must fulfill input requirements of first step of the pipeline.
+         Training data. Must fulfil input requirements of first step of the pipeline.
 
         Returns
         -------
@@ -195,7 +196,7 @@ class Neuroharmony(BaseEstimator, TransformerMixin):
     regression_features: list
      Features used to derive harmonization rules, for example, IQMs.
     covars: list
-     Variables for which we whant to eliminate the bias, for example, age, sex, and scanner.
+     Variables for which we want to eliminate the bias, for example, age, sex, and scanner.
     estimator: sklearn estimator, default=RandomForestRegressor()
      Model to make the harmonization regression.
     scaler: sklearn scaler, default=RobustScaler()
@@ -309,7 +310,7 @@ class Neuroharmony(BaseEstimator, TransformerMixin):
         Parameters
         ----------
         df: NDFrame, of shape [n_subjects, n_features]
-         Training data. Must fulfill input requirements of first step of the pipeline.
+         Training data. Must fulfil input requirements of first step of the pipeline.
 
         Returns
         -------

@@ -217,7 +217,7 @@ class DataSet(Site):
     Parameters
     ----------
     dir_path: pathlib.PosixPath
-        Path to the data of the site. The folowing files are required: freesurferData.csv, participants.tsv,
+        Path to the data of the site. The following files are required: freesurferData.csv, participants.tsv,
         group_T1w.tsv, mclf*.csv, and Qoala*.csv. These files should be inside scanner folders which should be inside
         site folders.
 
