@@ -75,6 +75,8 @@ class ComBat(BaseEstimator, TransformerMixin):
             index_name = df.index.name
         else:
             index_name = 'subject_index'
+        if df.index.name in df.columns:
+            index_name = df.index.name + '_y'
         harmonized = DataFrame(harmonized, index=df.index, columns=self.features).drop_duplicates()
         harmonized.index.rename(index_name, inplace=True)
         df = df.loc[harmonized.index][extra_vars].drop_duplicates().reset_index().copy()
