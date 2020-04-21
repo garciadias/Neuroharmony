@@ -24,6 +24,7 @@ def resources(tmpdir_factory):
     r.covariates = ['Gender', 'scanner', 'Age']
     r.eliminate_variance = ['scanner']
     r.original_data = DataSet(Path(r.data_path)).data
+    r.original_data = r.original_data[~r.original_data[r.covariates].isna().any(axis=1)]
     r.original_data.Age = r.original_data.Age.astype(int)
     scanners = r.original_data.scanner.unique()
     train_bool = r.original_data.scanner.isin(scanners[1:])
@@ -36,10 +37,10 @@ def resources(tmpdir_factory):
 
 def test_label_encode_decode(resources):
     """Test encoder and decoder."""
-    encoders = label_encode_covariates(resources.X_train_split, resources.covariates)
-    assert all([isinstance(value, int) for value in resources.X_train_split.scanner])
-    label_decode_covariates(resources.X_train_split, resources.covariates, encoders)
-    assert all([isinstance(value, str) for value in resources.X_train_split.scanner])
+    df, encoders = label_encode_covariates(resources.X_train_split, resources.covariates)
+    assert all([isinstance(value, int) for value in df.scanner])
+    df = label_decode_covariates(df, resources.covariates, encoders)
+    assert all([isinstance(value, str) for value in df.scanner])
 
 
 def test_neuroharmony_behaviour(resources):

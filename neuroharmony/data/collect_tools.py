@@ -84,13 +84,19 @@ def collect_multiple_datafile(filepath_list, root_path, local_path):
 
 
 if __name__ == '__main__':
-    SERVER_ROOT = '/media/d/My Passport/SynologyDrive'
+    from pandas import read_csv
+
+    SERVER_ROOT = '/media/kcl_2/HDD/SynologyDrive'
     PARTICIPANT_ROOT = '%s/BIDS_data/' % SERVER_ROOT
     FREESURFER_ROOT = '%s/FreeSurfer_preprocessed/' % SERVER_ROOT
     QOALA_ROOT = '%s/Qoala/' % SERVER_ROOT
     MRIQC_ROOT = '%s/MRIQC/' % SERVER_ROOT
     Path('./data/processed').mkdir(exist_ok=True, parents=True)
     PARTICIPANTS_FILES = find_all_files_by_name(PARTICIPANT_ROOT, 'participants.tsv', depth=3)
+    for file_path in PARTICIPANTS_FILES:
+        df = read_csv(file_path, header=0, sep='\t')
+        df['image_id'] = df[['participant_id', 'session_id', 'acq_id', 'run_id']].agg('_'.join, axis=1) + '_T1w'
+        df.to_csv(file_path, index=False, sep='\t')
     FSURFER_FILES = find_all_files_by_name(FREESURFER_ROOT, 'freesurferData.csv', depth=3)
     QOALA_FILES = find_all_files_by_name(QOALA_ROOT, 'Qoala*.csv', depth=3)
     MRIQC_GROUP_FILES = find_all_files_by_name(MRIQC_ROOT, 'group_T1w.tsv', depth=3)

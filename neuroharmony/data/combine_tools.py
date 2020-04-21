@@ -5,7 +5,6 @@ import warnings
 import pandas as pd
 
 from neuroharmony.data.collect_tools import find_all_files_by_name
-from neuroharmony.data.rois import rois
 
 
 class Site(object):
@@ -53,8 +52,10 @@ class Site(object):
 
     """
 
-    def __init__(self, dir_path):
+    def __init__(self, dir_path, merge_on='image_id', renamed_id='participant_id'):
         self.dir_path = dir_path
+        self.merge_on = merge_on
+        self.renamed_id = renamed_id
         self.name = dir_path.name
         self._get_scanners()
 
@@ -75,15 +76,17 @@ class Site(object):
             if self._is_complete():
                 self._load_files()
                 self._combine_files()
-                self.data['scanner'] = '%s-SCANNER01' % self.name
-                self.data.index = self.data.participant_id + '-00'
-                self.complete_scanners = ['%s-SCANNER01' % self.name]
+                self.data['scanner'] = self.name
+                self.data.index = self.data[self.renamed_id] + '-00'
+                self.complete_scanners = [self.name]
             else:
                 self.data = pd.DataFrame()
         else:
             self.scanner_list = [subdir.replace(f'{self.dir_name}-', '') for subdir in subdirs]
             for scanner_name in subdirs:
-                scanner = Scanner(self.dir_path / Path(scanner_name))
+                scanner = Scanner(self.dir_path / Path(scanner_name),
+                                  merge_on=self.merge_on,
+                                  renamed_id=self.renamed_id)
                 scanner_name = scanner_name.replace(f'{self.dir_name}-', '')
                 setattr(self, scanner_name, scanner)
                 scanner._get_files()
@@ -125,26 +128,19 @@ class Site(object):
         self.qoala = pd.read_csv(self.qoala_path, header=0)
 
     def _combine_files(self):
-        participant_id = self.freesurferData['image_id'].str.split("_").str[0]
-        self.freesurferData['participant_id'] = participant_id
-        df = pd.merge(self.participants, self.freesurferData, on='participant_id', how='inner')
-        df = df.dropna(how="any")
-        df = pd.merge(df, self.iqm, on='image_id', how='inner')
-        x = df[rois].astype('float32').divide(df['EstimatedTotalIntraCranialVol'], axis=0)
-        x['tiv'] = df['EstimatedTotalIntraCranialVol'].values.astype('float32')
-        extra_data = list(df.columns)
-        redundant_names = ['image_id',
-                           'bids_name',
-                           'EstimatedTotalIntraCranialVol',
-                           'Handedness']
-        for var in rois + redundant_names:
-            try:
-                extra_data.remove(var)
-            except ValueError:
-                pass
-        for var in extra_data:
-            x[var] = df[var]
-        self.data = x
+        if all(self.merge_on in dataframe for dataframe in [self.freesurferData,
+                                                            self.participants,
+                                                            self.iqm, self.pred,
+                                                            self.qoala]
+               ):
+            self.data = pd.merge(self.participants, self.freesurferData, on=self.merge_on, how='inner')
+            self.data = pd.merge(self.data, self.iqm, on=self.merge_on, how='inner')
+            self.data = pd.merge(self.data, self.pred, on=self.merge_on, how='inner')
+            self.data = pd.merge(self.data, self.qoala, on=self.merge_on, how='inner')
+            self.data[self.renamed_id] = self.data[self.merge_on]
+        else:
+            warnings.warn('The field %s is not found in %s.' % (self.merge_on, self.dir_path.name))
+            self.data = pd.DataFrame([''], index=[''], columns=[self.renamed_id])
 
     def _combine_all_scanners(self):
         """If there are multiple scanners on a site they will be combined in the attribute 'data'."""
@@ -155,9 +151,13 @@ class Site(object):
                 getattr(self, scanner_name)._load_files()
                 getattr(self, scanner_name)._combine_files()
                 scanner_data = getattr(self, scanner_name).data
-                scanner_data['scanner'] = '%s-%s' % (self.name, scanner_name)
-                id_appendix = participant_id_format % scanner_id
-                scanner_data.index = scanner_data.participant_id + id_appendix
+                if len(scanner_data) > 0:
+                    scanner_data['scanner'] = '%s-%s' % (self.name, scanner_name)
+                    try:
+                        id_appendix = participant_id_format % scanner_id
+                        scanner_data.index = scanner_data[self.renamed_id] + str(id_appendix)
+                    except TypeError:
+                        print(self.dir_path.name)
         self.complete_scanners = [scanner_name
                                   for scanner_name in self.scanner_list
                                   if getattr(self, scanner_name)._is_complete()]
@@ -203,9 +203,11 @@ class Scanner(Site):
 
     """
 
-    def __init__(self, dir_path):
+    def __init__(self, dir_path, merge_on='image_id', renamed_id='participant_id'):
         self.dir_path = dir_path
         self.name = dir_path.name
+        self.merge_on = merge_on
+        self.renamed_id = renamed_id
 
 
 class DataSet(Site):
@@ -268,9 +270,11 @@ class DataSet(Site):
 
     """
 
-    def __init__(self, dir_path):
+    def __init__(self, dir_path, merge_on='image_id', renamed_id='participant_id'):
         self.dir_path = dir_path
         self.name = 'All sites'
+        self.merge_on = merge_on
+        self.renamed_id = renamed_id
         self._get_sites()
         self._combine_all_sites()
 
@@ -280,7 +284,7 @@ class DataSet(Site):
         self.sites = [site_path.name for site_path in self.site_paths]
         self.not_empty_sites = []
         for site_path in self.site_paths:
-            site = Site(site_path)
+            site = Site(site_path, merge_on=self.merge_on, renamed_id='participant_id')
             setattr(self, site.name, site)
             self.not_empty_sites.append(site.name)
 
