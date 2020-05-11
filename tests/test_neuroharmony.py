@@ -35,6 +35,22 @@ def resources(tmpdir_factory):
     return r
 
 
+@pytest.fixture(scope='session')
+def model(resources):
+    neuroharmony = Neuroharmony(resources.features,
+                                resources.regression_features,
+                                resources.covariates,
+                                resources.eliminate_variance,
+                                param_distributions=dict(
+                                    RandomForestRegressor__n_estimators=[5, 10, 15, 20],
+                                    RandomForestRegressor__random_state=[42, 78],
+                                    RandomForestRegressor__warm_start=[False, True],
+                                ),
+                                estimator_args=dict(n_jobs=1, random_state=42),
+                                randomized_search_args=dict(cv=5, n_jobs=27))
+    return neuroharmony
+
+
 def test_label_encode_decode(resources):
     """Test encoder and decoder."""
     df, encoders = label_encode_covariates(resources.X_train_split, resources.covariates)
@@ -62,9 +78,25 @@ def test_neuroharmony_behaviour(resources):
     data_harmonized = concat([x_train_harmonized, x_test_harmonized], sort=False)
     KS_original = ks_test_grid(resources.original_data, resources.features, 'scanner')
     KS_harmonized = ks_test_grid(data_harmonized, resources.features, 'scanner')
-    assert KS_original[resources.features[0]].shape == (resources.n_scanners,
-                                                        resources.n_scanners)
-    assert KS_harmonized[resources.features[0]].shape == (resources.n_scanners,
-                                                          resources.n_scanners)
+    assert KS_original[resources.features[0]].shape == (resources.n_scanners, resources.n_scanners)
+    assert KS_harmonized[resources.features[0]].shape == (resources.n_scanners, resources.n_scanners)
     assert isinstance(x_test, NDFrame)
     assert isinstance(neuroharmony, BaseEstimator)
+    assert not neuroharmony.prediction_is_covered_.all(), 'No subjects out of the range.'
+
+
+def test_ckeck_training_range(model, resources):
+    neuroharmony = model
+    neuroharmony._check_training_ranges(resources.X_train_split)
+    assert isinstance(neuroharmony.coverage_, NDFrame), 'coverage_ is not DataFrame.'
+    assert not neuroharmony.coverage_.isna().any().any(), 'NaN field detected.'
+
+
+def test_ckeck_prediction_range(model, resources):
+    neuroharmony = model
+    neuroharmony._check_training_ranges(resources.X_train_split)
+    neuroharmony._check_prediction_ranges(resources.X_test_split)
+    assert isinstance(neuroharmony.prediction_is_covered_, NDFrame), 'prediction_is_covered_ is not DataFrame.'
+    assert not neuroharmony.prediction_is_covered_.isna().any(), 'NaN field detected.'
+    assert not neuroharmony.prediction_is_covered_.all(), 'No subjects out of the range.'
+    assert isinstance(neuroharmony.subjects_out_of_range_, list), 'The subjects_out_of_range_ is not a list.'
