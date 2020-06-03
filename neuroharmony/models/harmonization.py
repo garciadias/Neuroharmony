@@ -2,6 +2,7 @@
 
 import os
 import sys
+import warnings
 
 from neuroCombat import neuroCombat
 from numpy import unique
@@ -271,6 +272,23 @@ class Neuroharmony(BaseEstimator, TransformerMixin):
         missing_features_str = "Missing features: %s" % ', '.join(vars[~is_feature_present])
         assert is_feature_present.all(), ValueError(missing_features_str)
 
+    def _check_training_ranges(self, df):
+        self.coverage_ = concat([df[self.features + self.regression_features].min(skipna=True),
+                                 df[self.features + self.regression_features].max(skipna=True)],
+                                axis=1, keys=['min', 'max'])
+
+    def _check_prediction_ranges(self, df):
+        self.prediction_is_covered_ = df[self.features + self.regression_features].apply(
+            lambda column: column.between(
+                self.coverage_['min'][column.name],
+                self.coverage_['max'][column.name],
+            )
+        ).all(axis=1)
+        if not self.prediction_is_covered_.all():
+            warnings.warn('Some of the subject are out of the training range. '
+                          'See Neuroharmony.subjects_out_of_range_ for a list of the affected subjects.')
+            self.subjects_out_of_range_ = self.prediction_is_covered_[~self.prediction_is_covered_].index.tolist()
+
     def _check_data(self, df):
         type_error = "Input data should be a pandas dataframe (NDFrame)."
         assert isinstance(df.copy(), NDFrame), TypeError(type_error)
@@ -332,6 +350,7 @@ class Neuroharmony(BaseEstimator, TransformerMixin):
 
         """
         self._check_data(df.copy())
+        self._check_training_ranges(df.copy())
         df, self.encoders = label_encode_covariates(df.copy(), unique(self.covariates + self.eliminate_variance))
         X_train_split, y_train_split = self._run_combat(df.copy())
         self.models_by_feature_ = {}
@@ -360,7 +379,6 @@ class Neuroharmony(BaseEstimator, TransformerMixin):
          Data harmonized with ComBat.
 
         """
-        self._check_data(df.copy())
         self.fit(df.copy())
         return self.X_harmonized_
 
@@ -381,6 +399,7 @@ class Neuroharmony(BaseEstimator, TransformerMixin):
         """
         # Check data
         self._check_data(df.copy())
+        self._check_prediction_ranges(df.copy())
         self.models_by_feature_[self.features[0]]._check_is_fitted('predict')
         self.predicted_ = DataFrame([], columns=self.features, index=df.index)
         for var in self.features:
