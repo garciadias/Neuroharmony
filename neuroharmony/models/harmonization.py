@@ -9,10 +9,11 @@ from numpy import unique
 from pandas import Series, DataFrame, concat, merge
 from pandas.core.generic import NDFrame
 from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.decomposition import PCA
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import LeaveOneGroupOut, RandomizedSearchCV
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import LabelEncoder, RobustScaler
+from sklearn.preprocessing import LabelEncoder, StandardScaler
 from tqdm import tqdm
 
 
@@ -211,7 +212,7 @@ class Neuroharmony(BaseEstimator, TransformerMixin):
      Variables for which we want to eliminate the bias, for example, age, sex, and scanner.
     estimator: sklearn estimator, default=RandomForestRegressor()
      Model to make the harmonization regression.
-    scaler: sklearn scaler, default=RobustScaler()
+    scaler: sklearn scaler, default=StandardScaler()
      Scaler used as first step of the harmonization regression.
     param_distributions: dict, default=dict(RandomForestRegressor__n_estimators=[100, 200, 500],
                                             RandomForestRegressor__warm_start=[False, True], )
@@ -244,7 +245,8 @@ class Neuroharmony(BaseEstimator, TransformerMixin):
                  covariates,
                  eliminate_variance,
                  estimator=RandomForestRegressor(),
-                 scaler=RobustScaler(),
+                 scaler=StandardScaler(),
+                 decomposition=PCA(),
                  param_distributions=dict(RandomForestRegressor__n_estimators=[100, 200, 500],
                                           RandomForestRegressor__criterion=['mse', 'mae'],
                                           RandomForestRegressor__warm_start=[False, True], ),
@@ -260,6 +262,7 @@ class Neuroharmony(BaseEstimator, TransformerMixin):
         self.eliminate_variance = eliminate_variance
         self.estimator = estimator
         self.scaler = scaler
+        self.decomposition = decomposition
         self.param_distributions = param_distributions
         self.randomized_search_args = randomized_search_args
         self.estimator.set_params(**estimator_args)
@@ -296,11 +299,33 @@ class Neuroharmony(BaseEstimator, TransformerMixin):
         self._check_vars(df.copy(), self.covariates)
         self._check_vars(df.copy(), self.eliminate_variance)
 
+    def _get_pca_n_componets(self, X):
+        X = self.scaler.fit_transform(X)
+        self.decomposition.set_params(n_components=X.shape[1])
+        self.decomposition.fit(X)
+        n = next(i for i, x in enumerate(self.decomposition.explained_variance_ratio_) if x < 0.01)
+        return [n + 1]
+
+    def _clean_bad_pca_parameters(self, X):
+        n_vars = len(self.regression_features) + 1
+        if 'PCA__n_components' in self.param_distributions.keys():
+            if any([n_components > n_vars for n_components in self.param_distributions['PCA__n_components']]):
+                self.param_distributions['PCA__n_components'] = [n_components
+                                                                 for n_components
+                                                                 in self.param_distributions['PCA__n_components']
+                                                                 if n_components > n_vars]
+                warnings.warn('Decomposition n_components > n_features are excluded from the parameters search.')
+        else:
+            self.param_distributions['PCA__n_components'] = self._get_pca_n_componets(X)
+
     def _random_search_with_leave_one_group_out_cv(self, X, y, groups):
+        if self.decomposition.__class__.__name__ == 'PCA':
+            self._clean_bad_pca_parameters(X)
         self.leaveonegroupout_ = LeaveOneGroupOut()
         self.cv = list(self.leaveonegroupout_.split(X, y, groups))
         self.pipeline = Pipeline(
             steps=[(self.scaler.__class__.__name__, self.scaler),
+                   (self.decomposition.__class__.__name__, self.decomposition),
                    (self.estimator.__class__.__name__, self.estimator),
                    ])
         self.pipeline.set_params(**self.pipeline_args)
