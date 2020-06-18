@@ -1,12 +1,15 @@
 """Tools for harmonization."""
 
+from pathlib import Path
+from requests import get
+import joblib
 import os
 import sys
 import warnings
 
 from neuroCombat import neuroCombat
 from numpy import unique
-from pandas import Series, DataFrame, concat, merge
+from pandas import Series, DataFrame, concat, merge, read_csv
 from pandas.core.generic import NDFrame
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.decomposition import PCA
@@ -17,7 +20,19 @@ from sklearn.preprocessing import LabelEncoder, StandardScaler
 from tqdm import tqdm
 
 
-def supress_print(func):
+def exclude_single_subject_groups(df, covariates):
+    """Exclude subjects with only a value in the variable field."""
+    for covar in covariates:
+        instances, n = unique(df[covar], return_counts=True)
+        category_counts = DataFrame(n, columns=['N'], index=instances)
+        single_subj = category_counts[category_counts.N == 1].index.tolist()
+        df = concat([df.groupby(covar).get_group(group)
+                     for group in df[covar].unique()
+                     if group not in single_subj])
+    return df
+
+
+def _supress_print(func):
     """Define decorator for print suppression."""
     def wrapper(*args, **kwargs):
         sys.stdout = open(os.devnull, 'w')
@@ -27,7 +42,7 @@ def supress_print(func):
     return wrapper
 
 
-def label_encode_covariates(df, covariates):
+def _label_encode_covariates(df, covariates):
     """Encode dataframe covariates."""
     encoders = {}
     for covar in covariates:
@@ -36,14 +51,44 @@ def label_encode_covariates(df, covariates):
     return df, encoders
 
 
-def label_decode_covariates(df, covariates, encoders):
+def _label_decode_covariates(df, covariates, encoders):
     """Decode dataframe covariates."""
     for covar in covariates:
         df[covar] = encoders[covar].inverse_transform(df[covar])
     return df
 
 
-@supress_print
+def _download(url, filepath):
+    dirpath = Path(filepath).parent
+    Path(dirpath).mkdir(exist_ok=True)
+    headers = {'user-agent': 'Wget/1.16 (linux-gnu)'}
+    r = get(url, stream=True, headers=headers)
+    total_size = int(r.headers.get('content-length', 0))
+    block_size = 1024
+    t = tqdm(total=total_size, unit='iB', unit_scale=True)
+    with open(filepath, 'wb') as f:
+        for data in r.iter_content(block_size):
+            t.update(len(data))
+            f.write(data)
+    t.close()
+
+
+def fetch_sample():
+    script_path = os.path.dirname(os.path.abspath(__file__))
+    filepath = f'{script_path}/../../data/test_sample.csv'
+    _download('https://www.dropbox.com/s/mxcaqx2y29n09rp/test_sample.csv', filepath)
+    return read_csv(filepath, index_col=0)
+
+
+def fetch_trained_model():
+    script_path = os.path.dirname(os.path.abspath(__file__))
+    filepath = f'{script_path}/../../data/neuroharmony.pkl.gz'
+    if not Path(filepath).exists():
+        _download('https://www.dropbox.com/s/s3521oqd3fpi0ll/neuroharmony.pkl.gz', filepath)
+    return joblib.load(filepath)
+
+
+@_supress_print
 def combat(*args, **kwargs):
     """Redefine ComBat to suppress printing unhelpful data."""
     return neuroCombat(*args, **kwargs)
@@ -53,7 +98,6 @@ class ComBat(BaseEstimator, TransformerMixin):
     """ComBat class."""
 
     def __init__(self, features, covariates, eliminate_variance):
-        """Initiate class with the original data."""
         self.features = features
         self.covariates = covariates
         self.eliminate_variance = eliminate_variance
@@ -79,22 +123,26 @@ class ComBat(BaseEstimator, TransformerMixin):
             index_name = 'subject_index'
         if df.index.name in df.columns:
             index_name = df.index.name + '_y'
-        harmonized = DataFrame(harmonized, index=df.index, columns=self.features).drop_duplicates()
+        harmonized = DataFrame(harmonized, index=df.index, columns=self.features)
         harmonized.index.rename(index_name, inplace=True)
-        df = df.loc[harmonized.index][extra_vars].drop_duplicates().reset_index().copy()
+        df = df.loc[harmonized.index][extra_vars].reset_index().copy()
         harmonized = harmonized.reset_index()
-        return merge(harmonized, df, how='inner', on=index_name).drop_duplicates().set_index(index_name)
+        return merge(harmonized, df, how='inner', on=index_name).set_index(index_name)
 
-    def _exclude_single_subject_groups(self, df):
+    def _check_single_subject_groups(self, df):
         """Exclude subjects with only a value in the variable field."""
         for covar in self.covariates:
             instances, n = unique(df[covar], return_counts=True)
             category_counts = DataFrame(n, columns=['N'], index=instances)
-            single_subj = category_counts[category_counts.N == 1].index.tolist()
-            df = concat([df.groupby(covar).get_group(group)
-                         for group in df[covar].unique()
-                         if group not in single_subj])
-        return df
+            single_subj = category_counts[category_counts.N == 1].index.astype('str').tolist()
+            if len(single_subj) > 0:
+                raise ValueError('ComBat harmonization requires more than one subject in each split group.'
+                                 f'The following covar imply groups of a single subject: {covar}'
+                                 )
+
+    def _check_subjects_with_nans(self, df):
+        if df.isna().any(axis=1).sum() > 0:
+            raise ValueError('NaN values found on subjects data.')
 
     def _run_combat(self, df):
         """Run ComBat for all covariates."""
@@ -106,9 +154,6 @@ class ComBat(BaseEstimator, TransformerMixin):
                                 batch_col=batch_col, )
             harmonized = self._reconstruct_original_fieds(df, harmonized, extra_vars)
         return harmonized
-
-    def _exclude_subjects_with_nans(self, df):
-        return df[~df.isna().any(axis=1)]
 
     def transform(self, df, y=None):
         """Run ComBat normalization.
@@ -146,16 +191,15 @@ class ComBat(BaseEstimator, TransformerMixin):
         sub-013-00-1  0.012818                0.000464           1       1        17
         sub-014-00-1  0.006289                0.000167           0       1        19
         sub-015-00-1  0.003310                0.000154           1       1        26
-
         """
         self._check_data(df.copy())
-        df, self.encoders = label_encode_covariates(df.copy(), unique(self.covariates + self.eliminate_variance))
-        df = self._exclude_single_subject_groups(df.copy())
-        df = self._exclude_subjects_with_nans(df.copy())
+        self._check_single_subject_groups(df.copy())
+        self._check_subjects_with_nans(df.copy())
+        df, self.encoders = _label_encode_covariates(df.copy(), unique(self.covariates + self.eliminate_variance))
         self.harmonized_ = self._run_combat(df.copy())
-        self.harmonized_ = label_decode_covariates(self.harmonized_,
-                                                   unique(self.covariates + self.eliminate_variance),
-                                                   self.encoders)
+        self.harmonized_ = _label_decode_covariates(self.harmonized_,
+                                                    unique(self.covariates + self.eliminate_variance),
+                                                    self.encoders)
         return self.harmonized_
 
     def fit(self, df):
@@ -173,7 +217,6 @@ class ComBat(BaseEstimator, TransformerMixin):
         -------
         self : ComBat
          This estimator
-
         """
         self.harmonized_ = self.transform(df.copy())
         return self
@@ -199,44 +242,43 @@ class ComBat(BaseEstimator, TransformerMixin):
         return self.harmonized_
 
 
-class Neuroharmony(BaseEstimator, TransformerMixin):
-    """Create a Neuroharmony model.
+class Neuroharmony(TransformerMixin, BaseEstimator):
+    """ Harmonization tool to mitigate scanner bias.
 
     Parameters
     ----------
-    features: list
+    features : list
      Target features to be harmonized, for example, ROIs.
-    regression_features: list
+    regression_features : list
      Features used to derive harmonization rules, for example, IQMs.
-    covariates: list
+    covariates : list
      Variables for which we want to eliminate the bias, for example, age, sex, and scanner.
-    estimator: sklearn estimator, default=RandomForestRegressor()
+    estimator : sklearn estimator, default=RandomForestRegressor()
      Model to make the harmonization regression.
-    scaler: sklearn scaler, default=StandardScaler()
+    scaler : sklearn scaler, default=StandardScaler()
      Scaler used as first step of the harmonization regression.
-    param_distributions: dict, default=dict(RandomForestRegressor__n_estimators=[100, 200, 500],
-                                            RandomForestRegressor__warm_start=[False, True], )
+    param_distributions : dict, default=dict(RandomForestRegressor__n_estimators=[100, 200, 500],
+                                             RandomForestRegressor__warm_start=[False, True], )
      Distribution of parameters to be testes on the RandomizedSearchCV.
-    **estimator_args: dict
+    **estimator_args : dict
      Parameters for the estimator.
-    **scaler_args: dict
+    **scaler_args : dict
      Parameters for the scaler.
-    **randomized_search_args: dict
+    **randomized_search_args : dict
      Parameters for the RandomizedSearchCV.
      See https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.RandomizedSearchCV.html
-    **pipeline_args: dict
+    **pipeline_args : dict
      Parameters for the sklearn Pipeline.
      See https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.Pipeline.html
 
     Attributes
     ----------
-    X_harmonized_: NDFrame [n_subjects, n_features]
+    X_harmonized_ : NDFrame [n_subjects, n_features]
      Input data harmonized.
-    leaveonegroupout_:
+    leaveonegroupout_ :
      Leave One Group Out cross-validator.
-    models_by_feature_:
+    models_by_feature_ :
      Estimators by features.
-
     """
 
     def __init__(self,
@@ -253,9 +295,7 @@ class Neuroharmony(BaseEstimator, TransformerMixin):
                  estimator_args=dict(n_jobs=1, random_state=42, criterion='mae', verbose=False),
                  scaler_args=dict(),
                  randomized_search_args=dict(),
-                 pipeline_args=dict(),
-                 ):
-        """Init."""
+                 pipeline_args=dict(), ):
         self.features = features
         self.regression_features = regression_features
         self.covariates = covariates
@@ -268,6 +308,104 @@ class Neuroharmony(BaseEstimator, TransformerMixin):
         self.estimator.set_params(**estimator_args)
         self.scaler.set_params(**scaler_args)
         self.pipeline_args = pipeline_args
+
+    def fit(self, df):
+        """Fit the model.
+
+        Fit all the transforms one after the other and transform the
+        data, then fit the transformed data using the final estimator.
+
+        Parameters
+        ----------
+        df : NDFrame, of shape [n_subjects, n_features]
+             Training data. Must fulfil input requirements of first step of the pipeline.
+
+        Returns
+        -------
+        self : Neuroharmony
+               This estimator
+        """
+        self._check_data(df.copy())
+        self._check_training_ranges(df.copy())
+        df, self.encoders = _label_encode_covariates(df.copy(), unique(self.covariates + self.eliminate_variance))
+        X_train_split, y_train_split = self._run_combat(df.copy())
+        self.models_by_feature_ = {}
+        desc = 'Randomized search of Neuroharmony hyperparameters: '
+        for var in tqdm(self.features, desc=desc):
+            self.models_by_feature_[var] = self._random_search_with_leave_one_group_out_cv(
+                X_train_split[self.regression_features + [var]],
+                y_train_split[var],
+                y_train_split['scanner'], )
+        return self
+
+    def fit_transform(self, df):
+        """Fit to data, then transform it.
+
+        Fits transformer to df and y with optional parameters fit_params
+        and returns a transformed version of df.
+
+        Parameters
+        ----------
+        df: NDFrame, of shape [n_subjects, n_features]
+         Training set.
+
+        Returns
+        -------
+        harmonized_: NDFrame, of shape [n_samples, n_features_new]
+         Data harmonized with ComBat.
+        """
+        self.fit(df.copy())
+        return self.X_harmonized_
+
+    def predict(self, df):
+        """Predict regression target for df.
+
+        The predicted regression target of an input sample is computed as the
+        mean predicted regression targets of the trees in the forest.
+
+        Parameters
+        ----------
+        df : NDFrame [n_samples, n_features]
+            Pandas dataframe with features, regression_features and covariates.
+
+        Returns
+        -------
+        y : NDFrame [n_samples, n_features]
+            Data harmonized with Neuroharmony.
+        """
+        # Check data
+        self._check_data(df.copy())
+        self._check_prediction_ranges(df.copy())
+        df, self.encoders = _label_encode_covariates(df.copy(), unique(self.covariates + self.eliminate_variance))
+        self.models_by_feature_[self.features[0]]._check_is_fitted('predict')
+        self.predicted_ = DataFrame([], columns=self.features, index=df.index)
+        for var in self.features:
+            predicted_y_1 = self.models_by_feature_[var].predict(
+                df[self.regression_features + [var]])
+            self.predicted_[var] = df[var] - predicted_y_1
+        self.predicted_ = self._reconstruct_original_fieds(df, self.predicted_, self.extra_vars)
+        self.predicted_ = _label_decode_covariates(self.predicted_,
+                                                   unique(self.covariates + self.eliminate_variance),
+                                                   self.encoders)
+        return self.predicted_
+
+    def transform(self, df):
+        """Predict regression target for df.
+
+        The predicted regression target of an input sample is computed as the
+        mean predicted regression targets of the trees in the forest.
+
+        Parameters
+        ----------
+        df : NDFrame [n_samples, n_features]
+            Pandas dataframe with features, regression_features and covariates.
+
+        Returns
+        -------
+        y : NDFrame [n_samples, n_features]
+            Data harmonized with Neuroharmony.
+        """
+        return self.predict(df.copy())
 
     def _check_vars(self, df, vars):
         vars = Series(vars)
@@ -339,8 +477,17 @@ class Neuroharmony(BaseEstimator, TransformerMixin):
 
     def _reconstruct_original_fieds(self, df, harmonized, extra_vars):
         """Concatenate ComBat data with the original data fields."""
+        if df.index.name is not None:
+            index_name = df.index.name
+        else:
+            index_name = 'subject_index'
+        if df.index.name in df.columns:
+            index_name = df.index.name + '_y'
         harmonized = DataFrame(harmonized, index=df.index, columns=self.features)
-        return concat([harmonized, df.loc[harmonized.index][extra_vars]], axis=1, sort=True)
+        harmonized.index.rename(index_name, inplace=True)
+        df = df.loc[harmonized.index][extra_vars].reset_index().copy()
+        harmonized = harmonized.reset_index()
+        return merge(harmonized, df, how='inner', on=index_name).set_index(index_name)
 
     def _train_neurofind(self, estimator=RandomForestRegressor()):
         return estimator.__class__.__name__
@@ -349,90 +496,10 @@ class Neuroharmony(BaseEstimator, TransformerMixin):
         self.extra_vars = df.columns[~df.columns.isin(self.features)]
         combat = ComBat(self.features, self.covariates, self.eliminate_variance)
         self.X_harmonized_ = combat.transform(df.copy())
-        self.X_harmonized_ = label_decode_covariates(self.X_harmonized_,
-                                                     unique(self.covariates + self.eliminate_variance),
-                                                     self.encoders)
+        self.X_harmonized_ = _label_decode_covariates(self.X_harmonized_,
+                                                      unique(self.covariates + self.eliminate_variance),
+                                                      self.encoders)
         delta = df[self.features] - self.X_harmonized_[self.features]
         y_train_split = concat([delta, df[self.extra_vars]], axis=1, sort=False).dropna()
         X_train_split = df.loc[y_train_split.index]
         return X_train_split, y_train_split
-
-    def fit(self, df):
-        """Fit the model.
-
-        Fit all the transforms one after the other and transform the
-        data, then fit the transformed data using the final estimator.
-
-        Parameters
-        ----------
-        df: NDFrame, of shape [n_subjects, n_features]
-         Training data. Must fulfil input requirements of first step of the pipeline.
-
-        Returns
-        -------
-        self : Neuroharmony
-         This estimator
-
-        """
-        self._check_data(df.copy())
-        self._check_training_ranges(df.copy())
-        df, self.encoders = label_encode_covariates(df.copy(), unique(self.covariates + self.eliminate_variance))
-        X_train_split, y_train_split = self._run_combat(df.copy())
-        self.models_by_feature_ = {}
-        desc = 'Randomized search of %s, ROIs regression' % self.estimator.__class__.__name__
-        for var in tqdm(self.features, desc=desc):
-            self.models_by_feature_[var] = self._random_search_with_leave_one_group_out_cv(
-                X_train_split[self.regression_features + [var]],
-                y_train_split[var],
-                y_train_split['scanner'], )
-        return self
-
-    def fit_transform(self, df):
-        """Fit to data, then transform it.
-
-        Fits transformer to df and y with optional parameters fit_params
-        and returns a transformed version of df.
-
-        Parameters
-        ----------
-        df: NDFrame, of shape [n_subjects, n_features]
-         Training set.
-
-        Returns
-        -------
-        harmonized_: NDFrame, of shape [n_samples, n_features_new]
-         Data harmonized with ComBat.
-
-        """
-        self.fit(df.copy())
-        return self.X_harmonized_
-
-    def predict(self, df):
-        """Predict regression target for df.
-
-        The predicted regression target of an input sample is computed as the
-        mean predicted regression targets of the trees in the forest.
-        Parameters
-        ----------
-        df : NDFrame [n_samples, n_features]
-            Pandas dataframe with features, regression_features and covariates.
-        Returns
-        -------
-        y : NDFrame [n_samples, n_features]
-            Data harmonized with Neuroharmony.
-
-        """
-        # Check data
-        self._check_data(df.copy())
-        self._check_prediction_ranges(df.copy())
-        self.models_by_feature_[self.features[0]]._check_is_fitted('predict')
-        self.predicted_ = DataFrame([], columns=self.features, index=df.index)
-        for var in self.features:
-            predicted_y_1 = self.models_by_feature_[var].predict(
-                df[self.regression_features + [var]])
-            self.predicted_[var] = df[var] - predicted_y_1
-        self.predicted_ = self._reconstruct_original_fieds(df, self.predicted_, self.extra_vars)
-        return self.predicted_
-
-        def transform(self, df):
-            return self.predict(df.copy())

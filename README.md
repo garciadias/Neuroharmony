@@ -14,50 +14,43 @@ python setup.py install
 # Example of use:
 
 ```python
-from neuroharmony import Neuroharmony
-from neuroharmony.data.rois import rois
-from neuroharmony.data.combine_tools import DataSet
-from neuroharmony.models.metrics import ks_test_grid
+"""
+==============================
+pre-trained Neuroharmony model
+==============================
 
-# Load the data.
-# You can do as you wish, as long as the input to Neuroharmony is a NDFrame (pandas).
-data_path = 'data/raw/IXI'
-features = rois[:3]
-regression_features = ['Age', 'summary_gm_median', 'spacing_x', 'summary_gm_p95',
-                         'cnr', 'size_x', 'cjv', 'summary_wm_mean', 'icvs_gm', 'wm2max']
-covariates = ['Gender', 'scanner', 'Age', 'Diag']
-eliminate_variance = ['scanner']
-original_data = DataSet(Path(data_path)).data
-original_data.Age = original_data.Age.astype(int)
-scanners = original_data.unique()
-# Split train and test leaving one scanner out.
-train_bool = original_data.isin(scanners[1:])
-test_bool = original_data.isin(scanners[:1])
-X_train_split = original_data[train_bool]
-X_test_split = original_data[test_bool]
-n_scanners = len(original_data.scanner.unique())
-x_train, x_test = X_train_split, X_test_split
+An example plot of how to load and apply pre-trained a Neuroharmony model.
+"""
+import matplotlib.pyplot as plt
+from neuroharmony.models.harmonization import fetch_trained_model, fetch_sample
+import seaborn as sns
 
-# Create the neuroharmony model.
-# Here you can establish the range of the hyperparameters random search or give specific values.
-harmony = Neuroharmony(features,
-                            regression_features,
-                            covariates,
-                            eliminate_variance,
-                            param_distributions=dict(
-                                RandomForestRegressor__n_estimators=[100, 200, 500],
-                                RandomForestRegressor__random_state=[42, 78],
-                                RandomForestRegressor__warm_start=[False, True],
-                            ),
-                            estimator_args=dict(n_jobs=1, random_state=42),
-                            randomized_search_args=dict(cv=5, n_jobs=8))
-# Fit the model.
-x_train_harmonized = harmony.fit_transform(x_train)
-# Predict correction to unseen data.
-x_test_harmonized = harmony.transform(x_test)
-# Compose a NDFrame with all the data.
-data_harmonized = concat([x_train_harmonized, x_test_harmonized], sort=False)
-# Use Kolmogorov-Smirnov test to stablish if the differences between scanners were indeed eliminated.
-KS_original = ks_test_grid(original_data, features, 'scanner')
-KS_harmonized = ks_test_grid(data_harmonized, features, 'scanner')
+X = fetch_sample()
+neuroharmony = fetch_trained_model()
+x_harmonized = neuroharmony.transform(X)
+
+rois = ['Left-Hippocampus',
+        'lh_bankssts_volume',
+        'lh_posteriorcingulate_volume',
+        'lh_superiorfrontal_volume',
+        'rh_frontalpole_volume',
+        'rh_parsopercularis_volume',
+        'rh_parstriangularis_volume',
+        'rh_superiorfrontal_volume',
+        'Right-Cerebellum-White-Matter',
+        ]
+fig, axes = plt.subplots(3, 3, figsize=(10, 10))
+for roi, ax in zip(rois, axes.flatten()):
+    ax.plot(neuroharmony.kde_data_[roi]['x'], neuroharmony.kde_data_[roi]['y'],
+            color='#fcb85b', ls='--', label='ComBat harmonized training set')
+    sns.kdeplot(X[roi], color='#f47376', ls=':', legend=False, ax=ax, label='Original test set')
+    sns.kdeplot(x_harmonized[roi], color='#00bcab', ls='-', legend=False, ax=ax, label='Harmonized test set')
+    ax.set_xlabel(roi, fontsize=13)
+axes.flatten()[2].legend(ncol=3, bbox_to_anchor=(0.8, 1.175), fontsize=13)
+axes.flatten()[3].set_ylabel('Density', fontsize=15)
+plt.subplots_adjust(left=0.07, right=0.99,
+                    bottom=0.05, top=0.96,
+                    hspace=0.20, wspace=0.20)
+plt.savefig('test.png', dpi=200)
+plt.show()
 ```

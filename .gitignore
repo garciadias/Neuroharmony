@@ -72,3 +72,5 @@ data/combined/all_subjects\.csv
 neuroCombat/
 
 harmo_env/
+
+*.gz

@@ -8,7 +8,8 @@ import pytest
 from sklearn.base import BaseEstimator
 
 from neuroharmony.data.combine_tools import DataSet
-from neuroharmony.models.harmonization import Neuroharmony, label_encode_covariates, label_decode_covariates
+from neuroharmony.models.harmonization import Neuroharmony, _label_encode_covariates, _label_decode_covariates
+from neuroharmony.models.harmonization import fetch_sample, exclude_single_subject_groups
 from neuroharmony.models.metrics import ks_test_grid
 from neuroharmony.data.rois import rois
 
@@ -30,6 +31,7 @@ def resources(tmpdir_factory):
     train_bool = r.original_data.scanner.isin(scanners[1:])
     test_bool = r.original_data.scanner.isin(scanners[:1])
     r.X_train_split = r.original_data[train_bool]
+    r.X_train_split = exclude_single_subject_groups(r.X_train_split, r.covariates)
     r.X_test_split = r.original_data[test_bool]
     r.n_scanners = len(r.original_data.scanner.unique())
     return r
@@ -53,9 +55,9 @@ def model(resources):
 
 def test_label_encode_decode(resources):
     """Test encoder and decoder."""
-    df, encoders = label_encode_covariates(resources.X_train_split, resources.covariates)
+    df, encoders = _label_encode_covariates(resources.X_train_split, resources.covariates)
     assert all([isinstance(value, int) for value in df.scanner])
-    df = label_decode_covariates(df, resources.covariates, encoders)
+    df = _label_decode_covariates(df, resources.covariates, encoders)
     assert all([isinstance(value, str) for value in df.scanner])
 
 
@@ -100,3 +102,8 @@ def test_ckeck_prediction_range(model, resources):
     assert not neuroharmony.prediction_is_covered_.isna().any(), 'NaN field detected.'
     assert not neuroharmony.prediction_is_covered_.all(), 'No subjects out of the range.'
     assert isinstance(neuroharmony.subjects_out_of_range_, list), 'The subjects_out_of_range_ is not a list.'
+
+
+def test_fetch_sample():
+    data = fetch_sample()
+    assert isinstance(data, NDFrame)
