@@ -1,7 +1,5 @@
 # Install Neuroharmony.
 
-Obs: <span style="color:red"> The tests in this repository depend on data from [IXI dataset](https://brain-development.org/ixi-dataset/). We will soon provide preprocessed/formatted data for this tests.</span>
-
 * Clone the repository:
 ```
 git clone https://github.com/garciadias/Neuroharmony.git
