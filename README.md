@@ -11,14 +11,11 @@ python setup.py install
 
 # Example of use:
 
-```python
-"""
-==============================
-pre-trained Neuroharmony model
-==============================
+## Pre-trained Neuroharmony model
 
 An example plot of how to load and apply pre-trained a Neuroharmony model.
-"""
+
+```python
 import matplotlib.pyplot as plt
 from neuroharmony.models.harmonization import fetch_trained_model, fetch_sample
 import seaborn as sns
