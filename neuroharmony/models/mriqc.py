@@ -4,6 +4,8 @@ from os import system, popen
 from pathlib import Path
 import json
 
+from pandas import read_csv
+
 description_template = dict(
     BIDSVersion='1.0.0',
     License='',
@@ -40,6 +42,13 @@ def _verify_docker_is_installed():
 def run_mriqc(subj_dir, out_dir, n_jobs=5):
     """Run MRIQC.
 
+    .. _MRIQC: https://github.com/poldracklab/mriqc
+    .. _`MRIQC documentation`: https://github.com/poldracklab/mriqc
+    .. _`docker`: https://docs.docker.com/get-docker/
+    This function is a wrapper to run the MRIQC_ tool on a docker_ container. It requires docker to be installed. MRIQC_
+    extracts no-reference IQMs (image quality metrics) from structural (T1w and T2w) and functional MRI (magnetic
+    resonance imaging) data. MRIQC is an open-source project. More information can be found at `MRIQC documentation`_.
+
     Parameters
     ----------
     subj_dir: str
@@ -48,6 +57,11 @@ def run_mriqc(subj_dir, out_dir, n_jobs=5):
      Path to the output of MRIQC analysis.
     n_jobs: int
      Number of cpu used to run MRIQC.
+
+    Returns
+    -------
+    IQMs: NDFrame, shape(n_subjects, 68)
+     Dataframe with the IQMs for each subject.
     """
     _verify_docker_is_installed()
     subj_dir = Path(subj_dir)
@@ -63,3 +77,4 @@ def run_mriqc(subj_dir, out_dir, n_jobs=5):
                    '--load-classifier -X group_T1w.tsv'
     system(get_group_cmd)
     system(get_pred_cmd)
+    return read_csv(f'{out_dir}/sample/group_T1w.tsv', delimiter='\t', index_col=0)
