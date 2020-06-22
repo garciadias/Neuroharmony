@@ -74,3 +74,5 @@ neuroCombat/
 harmo_env/
 
 *.gz
+
+data/test_bids/
