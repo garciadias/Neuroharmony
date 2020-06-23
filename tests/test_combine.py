@@ -67,3 +67,9 @@ def test_combine_all_sites():
     assert isinstance(DATASET.IXI.data, NDFrame)
     assert isinstance(DATASET.COBRE.data, NDFrame)
     assert isinstance(DATASET.data, NDFrame)
+
+
+def test_combine_freesurfer():
+    """Test the combination of the freesurfer output return a dataframe."""
+    FREESURFER = combine_tools.combine_freesurfer('/media/kcl_2/HDD/test_bids/sample/fresurfer')
+    assert isinstance(FREESURFER, NDFrame)

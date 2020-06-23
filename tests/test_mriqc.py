@@ -12,5 +12,5 @@ def test_mriqc_runs_without_errors():
     out_dir = "data/test_bids/mriqc/"
     if not Path(f'{out_dir}/sample/group_T1w.tsv').exists():
         IQMs = run_mriqc(subj_dir, out_dir, n_jobs=5)
+        assert isinstance(IQMs, NDFrame)
     assert Path(f'{out_dir}/sample/group_T1w.tsv').exists()
-    assert isinstance(IQMs, NDFrame)

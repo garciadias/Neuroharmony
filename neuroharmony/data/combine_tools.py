@@ -5,6 +5,33 @@ import warnings
 import pandas as pd
 
 from neuroharmony.data.collect_tools import find_all_files_by_name
+from neuroharmony.data.rois import rois
+
+
+def combine_freesurfer(freesurfer_path):
+    """Combine aparc and aseg data files in a single csv files.
+
+    It uses the list in columns_name.list file to select the relevant features in the freesurfer output.
+
+    Parameters
+    ----------
+    freesurfer_path: string
+     The path to the subject directories.
+
+    Returns
+    -------
+    combined :
+     A dataframe with the subjects information.
+    """
+    aseg_stats = pd.read_csv(f'{freesurfer_path}/aseg_stats.txt', delimiter='\t')
+    lh_aparc_stats = pd.read_csv(f'{freesurfer_path}/lh_aparc_stats.txt', delimiter='\t')
+    rh_aparc_stats = pd.read_csv(f'{freesurfer_path}/rh_aparc_stats.txt', delimiter='\t')
+
+    combined = pd.merge(aseg_stats, lh_aparc_stats, left_on='Measure:volume', right_on='lh.aparc.volume')
+    combined = pd.merge(combined, rh_aparc_stats, left_on='Measure:volume', right_on='rh.aparc.volume')
+    combined.rename(columns={'Measure:volume': 'image_id'}, inplace=True)
+    combined = combined.set_index('image_id')[rois]
+    return combined
 
 
 class Site(object):
