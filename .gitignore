@@ -76,3 +76,7 @@ harmo_env/
 *.gz
 
 data/test_bids/
+
+data/mri/
+
+data/mri.zip

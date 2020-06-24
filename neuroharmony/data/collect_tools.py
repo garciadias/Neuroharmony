@@ -1,11 +1,84 @@
 """Collect tools."""
 from pathlib import Path
+from requests import get
 from shutil import copyfile
+from zipfile import ZipFile
+import joblib
+import os
+
+from pandas import read_csv
+from tqdm import tqdm
+
+
+def _download(url, filepath):
+    dirpath = Path(filepath).parent
+    Path(dirpath).mkdir(exist_ok=True)
+    headers = {'user-agent': 'Wget/1.16 (linux-gnu)'}
+    r = get(url, stream=True, headers=headers)
+    total_size = int(r.headers.get('content-length', 0))
+    block_size = 1024
+    t = tqdm(total=total_size, unit='iB', unit_scale=True)
+    with open(filepath, 'wb') as f:
+        for data in r.iter_content(block_size):
+            t.update(len(data))
+            f.write(data)
+    t.close()
+
+
+def fetch_mri_data():
+    """Fetch example of MRI dataset.
+
+    The dataset is a replication of the Bert subject released with the FreeSurfer software for testing.
+
+    Returns
+    -------
+    mri_path: str
+     Path for the MRI data.
+    """
+    script_path = os.path.dirname(os.path.abspath(__file__))
+    filepath = f'{script_path}/../../data/mri.zip'
+    unzip_folder = str(Path(filepath).parent) + '/mri/'
+    if not Path(filepath).exists():
+        _download('https://www.dropbox.com/s/lzg956j69hnr7hj/ds002934.zip', filepath)
+        Path(unzip_folder).mkdir(exist_ok=True)
+        zip_file = ZipFile(filepath, 'r')
+        zip_file.extractall(unzip_folder)
+        zip_file.close()
+        os.remove(filepath)
+    return str(Path(unzip_folder).absolute())
+
+
+def fetch_sample():
+    """Fetch subjects in the ADHD200_ and the PPMI_ datasets in the Neuroharmony format.
+
+    Returns
+    -------
+    dataset: NDFrame
+     Dataframe with data from ADHD200 and the PPMI subjects in the  Neuroharmony format.
+    """
+    script_path = os.path.dirname(os.path.abspath(__file__))
+    filepath = f'{script_path}/../../data/test_sample.csv'
+    _download('https://www.dropbox.com/s/mxcaqx2y29n09rp/test_sample.csv', filepath)
+    return read_csv(filepath, index_col=0)
+
+
+def fetch_trained_model():
+    """Fetch Neuroharmony pre-trained model.
+
+    Returns
+    -------
+    neuroharmony: Neuroharmony class
+     Pre-trained Neuroharmony model.
+    """
+    script_path = os.path.dirname(os.path.abspath(__file__))
+    filepath = f'{script_path}/../../data/neuroharmony.pkl.gz'
+    if not Path(filepath).exists():
+        _download('https://www.dropbox.com/s/s3521oqd3fpi0ll/neuroharmony.pkl.gz', filepath)
+    return joblib.load(filepath)
 
 
 def find_all_files_by_name(directory_path, file_pattern, depth=2):
-    """
-    Find all files in a folder.
+    """Find all files in a folder.
 
     Parameters
     ----------
@@ -31,8 +104,7 @@ def find_all_files_by_name(directory_path, file_pattern, depth=2):
 
 
 def collect_datafile(filepath, root_path, local_path):
-    """
-    Collect a datafile.
+    """Collect a datafile.
 
     Parameters
     ----------
@@ -59,8 +131,7 @@ def collect_datafile(filepath, root_path, local_path):
 
 
 def collect_multiple_datafile(filepath_list, root_path, local_path):
-    """
-    Collect a list of datafiles.
+    """Collect a list of datafiles.
 
     Parameters
     ----------

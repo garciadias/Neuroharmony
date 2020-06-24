@@ -9,7 +9,7 @@ from sklearn.base import BaseEstimator
 
 from neuroharmony.data.combine_tools import DataSet
 from neuroharmony.models.harmonization import Neuroharmony, _label_encode_covariates, _label_decode_covariates
-from neuroharmony.models.harmonization import fetch_sample, exclude_single_subject_groups
+from neuroharmony.models.harmonization import exclude_single_subject_groups
 from neuroharmony.models.metrics import ks_test_grid
 from neuroharmony.data.rois import rois
 
@@ -102,8 +102,3 @@ def test_ckeck_prediction_range(model, resources):
     assert not neuroharmony.prediction_is_covered_.isna().any(), 'NaN field detected.'
     assert not neuroharmony.prediction_is_covered_.all(), 'No subjects out of the range.'
     assert isinstance(neuroharmony.subjects_out_of_range_, list), 'The subjects_out_of_range_ is not a list.'
-
-
-def test_fetch_sample():
-    data = fetch_sample()
-    assert isinstance(data, NDFrame)

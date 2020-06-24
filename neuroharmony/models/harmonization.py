@@ -1,15 +1,11 @@
 """Tools for harmonization."""
-
-from pathlib import Path
-from requests import get
-import joblib
 import os
 import sys
 import warnings
 
 from neuroCombat import neuroCombat
 from numpy import unique
-from pandas import Series, DataFrame, concat, merge, read_csv
+from pandas import Series, DataFrame, concat, merge
 from pandas.core.generic import NDFrame
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.decomposition import PCA
@@ -56,36 +52,6 @@ def _label_decode_covariates(df, covariates, encoders):
     for covar in covariates:
         df[covar] = encoders[covar].inverse_transform(df[covar])
     return df
-
-
-def _download(url, filepath):
-    dirpath = Path(filepath).parent
-    Path(dirpath).mkdir(exist_ok=True)
-    headers = {'user-agent': 'Wget/1.16 (linux-gnu)'}
-    r = get(url, stream=True, headers=headers)
-    total_size = int(r.headers.get('content-length', 0))
-    block_size = 1024
-    t = tqdm(total=total_size, unit='iB', unit_scale=True)
-    with open(filepath, 'wb') as f:
-        for data in r.iter_content(block_size):
-            t.update(len(data))
-            f.write(data)
-    t.close()
-
-
-def fetch_sample():
-    script_path = os.path.dirname(os.path.abspath(__file__))
-    filepath = f'{script_path}/../../data/test_sample.csv'
-    _download('https://www.dropbox.com/s/mxcaqx2y29n09rp/test_sample.csv', filepath)
-    return read_csv(filepath, index_col=0)
-
-
-def fetch_trained_model():
-    script_path = os.path.dirname(os.path.abspath(__file__))
-    filepath = f'{script_path}/../../data/neuroharmony.pkl.gz'
-    if not Path(filepath).exists():
-        _download('https://www.dropbox.com/s/s3521oqd3fpi0ll/neuroharmony.pkl.gz', filepath)
-    return joblib.load(filepath)
 
 
 @_supress_print

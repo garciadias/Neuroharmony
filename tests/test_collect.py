@@ -6,6 +6,7 @@ from os import popen
 import pytest
 
 from neuroharmony.data import collect_tools
+from pandas.core.generic import NDFrame
 
 
 @pytest.fixture(scope='session')
@@ -42,3 +43,8 @@ def test_collect_datafile(resources):
                                    resources.bids_root, str(resources.tmpdir))
     assert Path(str(participants_list[0]).replace(resources.bids_root,
                                                   str(resources.tmpdir))).exists()
+
+
+def test_fetch_sample():
+    data = collect_tools.fetch_sample()
+    assert isinstance(data, NDFrame)

@@ -71,5 +71,6 @@ def test_combine_all_sites():
 
 def test_combine_freesurfer():
     """Test the combination of the freesurfer output return a dataframe."""
-    FREESURFER = combine_tools.combine_freesurfer('/media/kcl_2/HDD/test_bids/sample/fresurfer')
+    mri_path = collect_tools.fetch_mri_data()
+    FREESURFER = combine_tools.combine_freesurfer(f'{mri_path}/derivatives/freesurfer/')
     assert isinstance(FREESURFER, NDFrame)
