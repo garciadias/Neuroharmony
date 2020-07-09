@@ -6,6 +6,7 @@ from pathlib import Path, PosixPath
 import pytest
 
 from neuroharmony.data import combine_tools, collect_tools
+from pandas import read_csv
 
 
 @pytest.fixture(scope='session')
@@ -46,31 +47,17 @@ def test_load_files():
     assert isinstance(site.SCANNER01.qoala, NDFrame)
 
 
-def test_combine_files():
-    """Test the combination of the data files return a NDFrame."""
-    site = combine_tools.Site(Path('data/raw/COBRE'))
-    assert isinstance(site.data, NDFrame)
-
-
-def test_combine_all_scanners():
-    """Test the combination of the scanners in a dataset works."""
-    site = combine_tools.Site(Path('data/raw/IXI'))
-    assert isinstance(site.SCANNER01.data, NDFrame)
-    assert isinstance(site.SCANNER02.data, NDFrame)
-    assert isinstance(site.SCANNER03.data, NDFrame)
-    assert isinstance(site.data, NDFrame)
-
-
-def test_combine_all_sites():
-    """Test we can combine all sites in a dataset."""
-    DATASET = combine_tools.DataSet(Path('data/raw/'))
-    assert isinstance(DATASET.IXI.data, NDFrame)
-    assert isinstance(DATASET.COBRE.data, NDFrame)
-    assert isinstance(DATASET.data, NDFrame)
-
-
 def test_combine_freesurfer():
     """Test the combination of the freesurfer output return a dataframe."""
     mri_path = collect_tools.fetch_mri_data()
     FREESURFER = combine_tools.combine_freesurfer(f'{mri_path}/derivatives/freesurfer/')
     assert isinstance(FREESURFER, NDFrame)
+    assert FREESURFER.index[0] == 'sub-0001'
+
+
+def test_combine_mriqc():
+    mri_path = collect_tools.fetch_mri_data()
+    print(mri_path)
+    MRIQC = combine_tools.combine_mriqc(f'{mri_path}/derivatives/mriqc/')
+    assert isinstance(MRIQC, NDFrame)
+    assert MRIQC.index[0] == 'sub-0001'

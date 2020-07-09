@@ -8,6 +8,35 @@ from neuroharmony.data.collect_tools import find_all_files_by_name
 from neuroharmony.data.rois import rois
 
 
+def _files_exists(directory_path, file_pattern):
+    """Verify if a file exists and is the unique file of that kind in the folder."""
+    file_search = find_all_files_by_name(directory_path, file_pattern)
+    if len(file_search) == 0:
+        return False
+    elif len(file_search) == 1:
+        return file_search[0]
+    else:
+        return file_search
+        warnings.warn('There are more than one %s file in this site.' % file_pattern)
+
+
+def create_neuroharmony_input(freesurferData, participants, iqm, mriqc_pred):
+    """Combine FreeSurfer data with the MRIQC data.
+
+    Parameters
+    ----------
+    freesurfer: NDFrame
+     A dataframe with the FreeSurfer information.
+    mriqc: NDFrame
+     A dataframe with the MRIQC information.
+
+    Returns
+    -------
+    combined: NDFrame
+     A dataframe with the FreeSurfer and MRIQC information combined.
+    """
+
+
 def combine_freesurfer(freesurfer_path):
     """Combine aparc and aseg data files in a single csv files.
 
@@ -21,7 +50,7 @@ def combine_freesurfer(freesurfer_path):
     Returns
     -------
     combined :
-     A dataframe with the subjects information.
+     A dataframe with the FreeSurfer information.
     """
     aseg_stats = pd.read_csv(f'{freesurfer_path}/aseg_stats.txt', delimiter='\t')
     lh_aparc_stats = pd.read_csv(f'{freesurfer_path}/lh_aparc_stats.txt', delimiter='\t')
@@ -29,8 +58,39 @@ def combine_freesurfer(freesurfer_path):
 
     combined = pd.merge(aseg_stats, lh_aparc_stats, left_on='Measure:volume', right_on='lh.aparc.volume')
     combined = pd.merge(combined, rh_aparc_stats, left_on='Measure:volume', right_on='rh.aparc.volume')
-    combined.rename(columns={'Measure:volume': 'image_id'}, inplace=True)
-    combined = combined.set_index('image_id')[rois]
+    combined.rename(columns={'Measure:volume': 'participant_id'}, inplace=True)
+    combined.participant_id = combined.participant_id.str.replace('/', '')
+    combined = combined.set_index('participant_id')[rois]
+    return combined
+
+
+def combine_mriqc(mri_path):
+    """Combine group_T1w and mclf files from the MRIQC run.
+
+    It uses the list in columns_name.list file to select the relevant features in the freesurfer output.
+
+    Parameters
+    ----------
+    mri_path: string
+     The path to the BIDS directory.
+
+    Returns
+    -------
+    combined :
+     A dataframe with the MRIQC information.
+    """
+    iqm_path = _files_exists(mri_path, 'group_T1w.tsv')
+    pred_path = _files_exists(mri_path, 'mclf*')
+    if not iqm_path or not pred_path:
+        raise FileNotFoundError(f'MRIQC files not found in {mri_path}')
+    iqm = pd.read_csv(iqm_path, header=0, sep='\t')
+    pred = pd.read_csv(pred_path, header=0)
+    pred['bids_name'] = 'sub-' + pred.subject_id + '_T1w'
+    pred.drop(columns='subject_id', inplace=True)
+    combined = pd.merge(iqm, pred, left_on='bids_name', right_on='bids_name')
+    combined.rename(columns={'bids_name': 'participant_id'}, inplace=True)
+    combined.participant_id = [subject_line[0] for subject_line in combined.participant_id.str.split('_')]
+    combined = combined.set_index('participant_id')
     return combined
 
 

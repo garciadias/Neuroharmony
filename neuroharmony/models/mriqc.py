@@ -1,7 +1,7 @@
 """Run MQIQC."""
-
 from os import system, popen
 from pathlib import Path
+from time import sleep
 import json
 
 from pandas import read_csv
@@ -77,4 +77,4 @@ def run_mriqc(subj_dir, out_dir, n_jobs=5):
                    '--load-classifier -X group_T1w.tsv'
     system(get_group_cmd)
     system(get_pred_cmd)
-    return read_csv(f'{out_dir}/sample/group_T1w.tsv', delimiter='\t', index_col=0)
+    return read_csv(f'{out_dir}/group_T1w.tsv', delimiter='\t', index_col=0)

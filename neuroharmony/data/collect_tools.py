@@ -39,7 +39,7 @@ def fetch_mri_data():
     filepath = f'{script_path}/../../data/mri.zip'
     unzip_folder = str(Path(filepath).parent) + '/mri/'
     if not Path(filepath).exists():
-        _download('https://www.dropbox.com/s/lzg956j69hnr7hj/ds002934.zip', filepath)
+        _download('https://www.dropbox.com/s/kcbq0266bcab3bx/ds002936.zip', filepath)
         Path(unzip_folder).mkdir(exist_ok=True)
         zip_file = ZipFile(filepath, 'r')
         zip_file.extractall(unzip_folder)
