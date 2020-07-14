@@ -16,27 +16,27 @@ from neuroharmony.data.rois import rois
 def compare_dfs(ks_original, ks_harmonized):
     """Compare two dictionaries of dataframes to measure the success of harmonization."""
     vars = ks_original.keys()
-    var_improved = Series(index=vars, dtype='bool')
+    var_improved = Series(index=vars, dtype="bool")
     for var in vars:
         improved = ks_original[var] < ks_harmonized[var]
         var_improved.loc[var] = improved.sum().sum()
     return var_improved
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def resources(tmpdir_factory):
     """Set up."""
-    r = namedtuple('resources', 'data_path')
-    r.data_path = 'data/raw/IXI'
+    r = namedtuple("resources", "data_path")
+    r.data_path = "data/raw/IXI"
     r.data = DataSet(Path(r.data_path)).data
     r.features = rois[:3]
-    r.covariates = ['Gender', 'scanner', 'Age']
+    r.covariates = ["Gender", "scanner", "Age"]
     r.data = r.data[~r.data[r.covariates].isna().any(axis=1)]
     r.data.Age = r.data.Age.astype(int)
     r.data = r.data.drop_duplicates()
     r.data = r.data[~r.data.isna().any(axis=1)]
     r.data = exclude_single_subject_groups(r.data, r.covariates)
-    r.eliminate_variance = ['scanner']
+    r.eliminate_variance = ["scanner"]
     r.n_scanners = len(r.data.scanner.unique())
     return r
 
@@ -47,7 +47,7 @@ def test_combat_is_functional(resources):
     data_harmonized = combat.transform(resources.data[resources.features + resources.covariates].copy())
     assert isinstance(data_harmonized, NDFrame)
     assert not data_harmonized.isna().any(axis=1).any()
-    assert_message = 'Scanner field is not string data_harmonized.scanner[0] = %s' % data_harmonized.scanner[0]
+    assert_message = "Scanner field is not string data_harmonized.scanner[0] = %s" % data_harmonized.scanner[0]
     assert isinstance(data_harmonized.scanner[0], str), assert_message
 
 
@@ -55,9 +55,9 @@ def test_harmonization_works(resources):
     """Test harmonization with ComBat using the Kolmogorov-Smirnov test."""
     combat = ComBat(resources.features, resources.covariates, resources.eliminate_variance)
     data_harmonized = combat.transform(resources.data[resources.features + resources.covariates])
-    KS_harmonized = ks_test_grid(data_harmonized, resources.features, 'scanner')
+    KS_harmonized = ks_test_grid(data_harmonized, resources.features, "scanner")
     assert isinstance(KS_harmonized, dict)
     assert isinstance(KS_harmonized[resources.features[0]], NDFrame)
     assert KS_harmonized[resources.features[0]].shape == (resources.n_scanners, resources.n_scanners)
-    KS_original = ks_test_grid(resources.data, resources.features, 'scanner')
+    KS_original = ks_test_grid(resources.data, resources.features, "scanner")
     assert (compare_dfs(KS_original, KS_harmonized) >= comb(resources.n_scanners, 2) - 1).all()
