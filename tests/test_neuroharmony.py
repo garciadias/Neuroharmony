@@ -3,11 +3,10 @@ from collections import namedtuple
 
 from pandas.core.generic import NDFrame
 from pandas import concat
-from pathlib import Path
 import pytest
 from sklearn.base import BaseEstimator
 
-from neuroharmony.data.combine_tools import DataSet
+from neuroharmony.data.collect_tools import fetch_sample
 from neuroharmony.models.harmonization import Neuroharmony, _label_encode_covariates, _label_decode_covariates
 from neuroharmony.models.harmonization import exclude_single_subject_groups
 from neuroharmony.models.metrics import ks_test_grid
@@ -18,7 +17,6 @@ from neuroharmony.data.rois import rois
 def resources(tmpdir_factory):
     """Set up."""
     r = namedtuple("resources", "data_path")
-    r.data_path = "data/raw/IXI"
     r.features = rois[:3]
     r.regression_features = [
         "Age",
@@ -34,7 +32,9 @@ def resources(tmpdir_factory):
     ]
     r.covariates = ["Gender", "scanner", "Age"]
     r.eliminate_variance = ["scanner"]
-    r.original_data = DataSet(Path(r.data_path)).data
+    r.original_data = fetch_sample()
+    exclude_vars = r.original_data.columns[r.original_data.isna().sum() != 0].to_list()
+    r.original_data = r.original_data[[var for var in r.original_data.columns if var not in exclude_vars]]
     r.original_data = r.original_data[~r.original_data[r.covariates].isna().any(axis=1)]
     r.original_data.Age = r.original_data.Age.astype(int)
     scanners = r.original_data.scanner.unique()
