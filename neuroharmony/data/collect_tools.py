@@ -33,7 +33,7 @@ def fetch_mri_data():
     Returns
     =======
     mri_path: str
-        Path for the MRI data.
+        The path for the MRI data.
     """
     script_path = os.path.dirname(os.path.abspath(__file__))
     filepath = f"{script_path}/../../data/mri.zip"
@@ -49,7 +49,7 @@ def fetch_mri_data():
 
 
 def fetch_sample():
-    """Fetch a saple of FreeSurfer derived volumes in the Neuroharmony format.
+    """Fetch a sample of FreeSurfer derived volumes in the Neuroharmony format.
 
     Fetch the FreeSurfer derived volumes of some subjects in the
     `ADHD200 <http://fcon_1000.projects.nitrc.org/indi/adhd200/index.html>`_ and in
@@ -92,7 +92,7 @@ def find_all_files_by_name(directory_path, file_pattern, depth=2):
     Parameters
     ==========
     directory_path: string
-        Path for a giving folder.
+        The path for a giving folder.
 
     file_pattern: string
         File extension (.csv, .pdf, .txt, ...).
@@ -117,13 +117,13 @@ def collect_datafile(filepath, root_path, local_path):
     Parameters
     ==========
     filepath: string or pathlib.PosixPath
-        Path for the file to be copied.
+        The path for the file to be copied.
 
     root_path: string
-        Path root to the origin of the data.
+        The path root to the origin of the data.
 
     local_path: string
-        Path to the local folder you want to save the copied data.
+        The path to the local folder you want to save the copied data.
 
     Returns
     =======
@@ -146,10 +146,10 @@ def collect_multiple_datafile(filepath_list, root_path, local_path):
         List of paths for the file to be copied.
 
     root_path: string
-        Path root to the origin of the data.
+        The path root to the origin of the data.
 
     local_path: string
-        Path to the local folder you want to save the copied data.
+        The path to the local folder you want to save the copied data.
 
     Returns
     =======

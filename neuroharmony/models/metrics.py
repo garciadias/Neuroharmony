@@ -22,7 +22,7 @@ def ks_test_grid(df, features, sampling_variable='scanner'):
 
     Parameters
     ----------
-    df: NDFrame (n_subjects, n_features)
+    df: NDFrame of shape [n_subjects, n_features]
         DataFrame with the subjects data.
 
     features: list
@@ -35,8 +35,8 @@ def ks_test_grid(df, features, sampling_variable='scanner'):
     -------
     KS_by_variable: dict of NDFrames
         Kolmogorov-Smirnov p-values to all pairs of instances in the sampling_variable column.
-        The keys in the dictionary are the variables in 'features'. The values of each entry are square NDFrames of the
-        form n_vars, n_vars.
+        The keys in the dictionary are the variables in 'features'. The values of each entry are square NDFrames of
+        shape [n_vars, n_vars].
 
     Raises
     ------
@@ -58,7 +58,6 @@ def ks_test_grid(df, features, sampling_variable='scanner'):
     +--------------------------+----------------------+------------------------+--------------------+
     |SCANNER03-SCANNER01       | 0.0539998            | 0.625887               | NaN                |
     +--------------------------+----------------------+------------------------+--------------------+
-
     """
     check_vars(df, features)
     groups = df.groupby(sampling_variable)

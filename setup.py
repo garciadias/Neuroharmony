@@ -35,10 +35,11 @@ setup(
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
         "Natural Language :: English",
-        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
     ],
     test_suite="tests",
     tests_requires=test_requirements,
+    entry_points={"console_scripts": ["mriqc-run=neuroharmony.models.mriqc:main"]},
 )
 
 system("pip install git+https://github.com/ncullen93/neuroCombat")
