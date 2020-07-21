@@ -5,7 +5,7 @@
 from setuptools import setup
 from os import system
 
-with open("README.md") as readme_file:
+with open("README.rst") as readme_file:
     readme = readme_file.read()
 
 with open("requirements.txt") as requirements:
@@ -16,30 +16,33 @@ test_requirements = [
 ]
 
 setup(
-    name="Neuroharmony",
-    version="0.0",
-    description="A tool to perform Freesurfer volume Harminization in unseen scanner.",
-    long_description=readme,
-    author="Rafael Garcia-Dias",
     author_email="rafaelagd@gmail.com",
-    url="https://github.com/garciadias/Neuroharmony",
-    packages=["neuroharmony", "neuroharmony.data", "neuroharmony.models"],
-    package_dir={"neuroharmony": "neuroharmony"},
-    include_package_data=True,
-    install_requires=requirements,
-    license="MIT license",
-    zip_safe=False,
-    keywords="Harminization, MRI, data science",
+    author="Rafael Garcia-Dias",
     classifiers=[
         "Development Status :: 2 - Pre-Alpha",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
         "Natural Language :: English",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
     ],
-    test_suite="tests",
-    tests_requires=test_requirements,
+    description="A tool to perform Freesurfer volume Harminization in unseen scanner.",
     entry_points={"console_scripts": ["mriqc-run=neuroharmony.models.mriqc:main"]},
+    include_package_data=True,
+    install_requires=requirements,
+    keywords="Harminization, MRI, data science",
+    license="MIT license",
+    long_description=readme,
+    name="Neuroharmony",
+    package_dir={"neuroharmony": "neuroharmony"},
+    packages=["neuroharmony"],
+    python_requires='>=3.6',
+    test_suite="pytest",
+    tests_requires=test_requirements,
+    url="https://github.com/garciadias/Neuroharmony",
+    version="0.0.1",
+    zip_safe=False,
 )
 
 system("pip install git+https://github.com/ncullen93/neuroCombat")
