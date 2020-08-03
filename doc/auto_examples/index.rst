@@ -12,69 +12,6 @@ General examples
 Introductory examples.
 
 
-
-.. raw:: html
-
-    <div class="sphx-glr-thumbcontainer" tooltip="Prepare dataset in the Neuroharmony format.">
-
-.. only:: html
-
- .. figure:: /auto_examples/images/thumb/sphx_glr_plot_data_in_the_neuroharmony_format_thumb.png
-     :alt: Prepare data for Neuroharmony
-
-     :ref:`sphx_glr_auto_examples_plot_data_in_the_neuroharmony_format.py`
-
-.. raw:: html
-
-    </div>
-
-
-.. toctree::
-   :hidden:
-
-   /auto_examples/plot_data_in_the_neuroharmony_format
-
-.. raw:: html
-
-    <div class="sphx-glr-thumbcontainer" tooltip="Apply a pre-trained Neuroharmony model">
-
-.. only:: html
-
- .. figure:: /auto_examples/images/thumb/sphx_glr_plot_neuroharmony_trained_thumb.png
-     :alt: Apply a pre-trained Neuroharmony model
-
-     :ref:`sphx_glr_auto_examples_plot_neuroharmony_trained.py`
-
-.. raw:: html
-
-    </div>
-
-
-.. toctree::
-   :hidden:
-
-   /auto_examples/plot_neuroharmony_trained
-
-.. raw:: html
-
-    <div class="sphx-glr-thumbcontainer" tooltip="In this example, we show how to train an instance of Neuroharmony. The dataset we use here is v...">
-
-.. only:: html
-
- .. figure:: /auto_examples/images/thumb/sphx_glr_plot_train_neuroharmony_thumb.png
-     :alt: Train your own Neuroharmony model
-
-     :ref:`sphx_glr_auto_examples_plot_train_neuroharmony.py`
-
-.. raw:: html
-
-    </div>
-
-
-.. toctree::
-   :hidden:
-
-   /auto_examples/plot_train_neuroharmony
 .. raw:: html
 
     <div class="sphx-glr-clear"></div>
