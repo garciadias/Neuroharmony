@@ -41,7 +41,7 @@ setup(
     test_suite="pytest",
     tests_requires=test_requirements,
     url="https://github.com/garciadias/Neuroharmony",
-    version="0.0.1",
+    version="0.0.1.0",
     zip_safe=False,
 )
 

@@ -29,7 +29,7 @@ def ks_test_grid(df, features, sampling_variable='scanner'):
         List of the features to be considered on the Kolmogorov-Smirnov test.
 
     sampling_variable: str, default='scanner'
-        variable for which you want to group subjects.
+        Variable for which you want to group subjects.
 
     Returns
     -------

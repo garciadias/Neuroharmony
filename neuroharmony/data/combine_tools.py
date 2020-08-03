@@ -48,7 +48,7 @@ def combine_freesurfer(freesurfer_path):
 
 
 def combine_mriqc(mri_path):
-    """Combine group_T1w and mclf files from the MRIQC run.
+    """Combine group_T1w and mclf files from the MRIQC output.
 
     It uses the list in columns_name.list file to select the relevant features in the freesurfer output.
 
