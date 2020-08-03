@@ -82,6 +82,5 @@ data/mri/
 data/mri.zip
 
 # Sphinx documentation
-doc/_build/
-doc/generated/
-
+docs/_build/
+docs/generated/
