@@ -11,10 +11,6 @@ with open("README.rst") as readme_file:
 with open("requirements.txt") as requirements:
     requirements = requirements.readlines()
 
-test_requirements = [
-    "pytest",
-]
-
 EXTRAS_REQUIRE = {
     'tests': [
         'pytest',
@@ -36,12 +32,10 @@ setup(
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
         "Natural Language :: English",
-        "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
     ],
-    dependency_links=['https://github.com/ncullen93/neuroCombat#egg=neuroCombat'],
     description="A tool to perform Freesurfer volume Harminization in unseen scanner.",
     entry_points={"console_scripts": ["mriqc-run=neuroharmony.models.mriqc:main"]},
     extras_require=EXTRAS_REQUIRE,
@@ -53,9 +47,8 @@ setup(
     name="Neuroharmony",
     package_dir={"neuroharmony": "neuroharmony"},
     packages=["neuroharmony"],
-    python_requires='>=3.5',
+    python_requires='>=3.6',
     test_suite="pytest",
-    tests_requires=test_requirements,
     url="https://github.com/garciadias/Neuroharmony",
     version="0.0.1.0",
     zip_safe=False,

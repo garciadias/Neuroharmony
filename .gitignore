@@ -80,7 +80,3 @@ data/test_bids/
 data/mri/
 
 data/mri.zip
-
-# Sphinx documentation
-docs/_build/
-docs/generated/
