@@ -1,0 +1,334 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Neuroharmony API &mdash; Neuroharmony 0.0.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/project-template.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/gallery.css" type="text/css" />
+  <link rel="stylesheet" href="_static/gallery-binder.css" type="text/css" />
+  <link rel="stylesheet" href="_static/gallery-dataframe.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script src="_static/js/copybutton.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="neuroharmony.Neuroharmony" href="generated/neuroharmony.Neuroharmony.html" />
+    <link rel="prev" title="Neuroharmony’s documentation" href="neuroharmony.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> Neuroharmony
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Neuroharmony</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="neuroharmony.html">Neuroharmony’s documentation</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Neuroharmony API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#harmonization-models">Harmonization models</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="generated/neuroharmony.Neuroharmony.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">neuroharmony</span></code>.Neuroharmony</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/neuroharmony.ComBat.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">neuroharmony</span></code>.ComBat</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#data-preparation">Data Preparation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="generated/neuroharmony.combine_freesurfer.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">neuroharmony</span></code>.combine_freesurfer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/neuroharmony.combine_mriqc.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">neuroharmony</span></code>.combine_mriqc</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/neuroharmony.exclude_single_subject_groups.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">neuroharmony</span></code>.exclude_single_subject_groups</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#download-samples">Download samples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="generated/neuroharmony.fetch_mri_data.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">neuroharmony</span></code>.fetch_mri_data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/neuroharmony.fetch_sample.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">neuroharmony</span></code>.fetch_sample</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/neuroharmony.fetch_trained_model.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">neuroharmony</span></code>.fetch_trained_model</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#kolmogorov-smirnov-test">Kolmogorov-Smirnov Test</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="generated/neuroharmony.ks_test_grid.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">neuroharmony</span></code>.ks_test_grid</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Tutorial - Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="auto_examples/index.html">General examples</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Neuroharmony</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Neuroharmony API</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/api.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="neuroharmony-api">
+<h1>Neuroharmony API<a class="headerlink" href="#neuroharmony-api" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="harmonization-models">
+<h2>Harmonization models<a class="headerlink" href="#harmonization-models" title="Permalink to this headline">¶</a></h2>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/neuroharmony.Neuroharmony.html#neuroharmony.Neuroharmony" title="neuroharmony.Neuroharmony"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Neuroharmony</span></code></a>(features, regression_features, …)</p></td>
+<td><p>Harmonization tool to mitigate scanner bias.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/neuroharmony.ComBat.html#neuroharmony.ComBat" title="neuroharmony.ComBat"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ComBat</span></code></a>(features, covariates, eliminate_variance)</p></td>
+<td><p>ComBat model for harmonization.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="data-preparation">
+<h2>Data Preparation<a class="headerlink" href="#data-preparation" title="Permalink to this headline">¶</a></h2>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/neuroharmony.combine_freesurfer.html#neuroharmony.combine_freesurfer" title="neuroharmony.combine_freesurfer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">combine_freesurfer</span></code></a>(freesurfer_path)</p></td>
+<td><p>Combine aparc and aseg data files in a single csv files.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/neuroharmony.combine_mriqc.html#neuroharmony.combine_mriqc" title="neuroharmony.combine_mriqc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">combine_mriqc</span></code></a>(mri_path)</p></td>
+<td><p>Combine group_T1w and mclf files from the MRIQC output.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/neuroharmony.exclude_single_subject_groups.html#neuroharmony.exclude_single_subject_groups" title="neuroharmony.exclude_single_subject_groups"><code class="xref py py-obj docutils literal notranslate"><span class="pre">exclude_single_subject_groups</span></code></a>(df, covariates)</p></td>
+<td><p>Exclude categories with only one subject.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="download-samples">
+<h2>Download samples<a class="headerlink" href="#download-samples" title="Permalink to this headline">¶</a></h2>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/neuroharmony.fetch_mri_data.html#neuroharmony.fetch_mri_data" title="neuroharmony.fetch_mri_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fetch_mri_data</span></code></a>()</p></td>
+<td><p>Fetch example of MRI dataset.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/neuroharmony.fetch_sample.html#neuroharmony.fetch_sample" title="neuroharmony.fetch_sample"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fetch_sample</span></code></a>()</p></td>
+<td><p>Fetch a sample of FreeSurfer derived volumes in the Neuroharmony format.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/neuroharmony.fetch_trained_model.html#neuroharmony.fetch_trained_model" title="neuroharmony.fetch_trained_model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fetch_trained_model</span></code></a>()</p></td>
+<td><p>Fetch Neuroharmony pre-trained model.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="kolmogorov-smirnov-test">
+<h2>Kolmogorov-Smirnov Test<a class="headerlink" href="#kolmogorov-smirnov-test" title="Permalink to this headline">¶</a></h2>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/neuroharmony.ks_test_grid.html#neuroharmony.ks_test_grid" title="neuroharmony.ks_test_grid"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ks_test_grid</span></code></a>(df, features[, sampling_variable])</p></td>
+<td><p>Calculate the Kolmogorov-Smirnov score for all pairs of scanners.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="generated/neuroharmony.Neuroharmony.html" class="btn btn-neutral float-right" title="neuroharmony.Neuroharmony" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="neuroharmony.html" class="btn btn-neutral float-left" title="Neuroharmony’s documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Rafael Garcia-Dias, Creative Commons.
+      <span class="lastupdated">
+        Last updated on Aug 05, 2020.
+      </span>
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

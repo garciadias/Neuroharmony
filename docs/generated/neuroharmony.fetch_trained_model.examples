@@ -1,0 +1,23 @@
+
+
+Examples using ``neuroharmony.fetch_trained_model``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Apply a pre-trained Neuroharmony model">
+
+.. only:: html
+
+ .. figure:: /auto_examples/images/thumb/sphx_glr_plot_neuroharmony_trained_thumb.png
+     :alt: Apply a pre-trained Neuroharmony model
+
+     :ref:`sphx_glr_auto_examples_plot_neuroharmony_trained.py`
+
+.. raw:: html
+
+    </div>
+
+.. only:: not html
+
+ * :ref:`sphx_glr_auto_examples_plot_neuroharmony_trained.py`

@@ -1,0 +1,23 @@
+
+
+Examples using ``neuroharmony.combine_freesurfer``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Prepare dataset in the Neuroharmony format.">
+
+.. only:: html
+
+ .. figure:: /auto_examples/images/thumb/sphx_glr_plot_data_in_the_neuroharmony_format_thumb.png
+     :alt: Prepare data for Neuroharmony
+
+     :ref:`sphx_glr_auto_examples_plot_data_in_the_neuroharmony_format.py`
+
+.. raw:: html
+
+    </div>
+
+.. only:: not html
+
+ * :ref:`sphx_glr_auto_examples_plot_data_in_the_neuroharmony_format.py`

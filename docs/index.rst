@@ -43,12 +43,6 @@ Neuroharmony's documentation
 
    api
 
-.. toctree::
-   :maxdepth: 2
-   :hidden:
-   :caption: Tutorial - Examples
-
-   auto_examples/index
 
 Install
 -------

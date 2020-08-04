@@ -53,3 +53,5 @@ setup(
     version="0.0.1.0",
     zip_safe=False,
 )
+
+system("pip install git+https://github.com/ncullen93/neuroCombat")

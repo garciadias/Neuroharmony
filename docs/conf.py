@@ -17,7 +17,7 @@ from distutils.version import LooseVersion
 import sphinx
 import os
 import sys
-sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath('..'))
 
 
 # If extensions (or modules to document with autodoc) are in another directory,
