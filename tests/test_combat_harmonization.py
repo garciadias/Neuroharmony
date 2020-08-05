@@ -11,6 +11,7 @@ from neuroharmony.data.combine_tools import DataSet
 from neuroharmony.models.harmonization import ComBat, exclude_single_subject_groups
 from neuroharmony.models.metrics import ks_test_grid
 from neuroharmony.data.rois import rois
+from neuroharmony.models.neuroCombat import neuroCombat
 
 
 def compare_dfs(ks_original, ks_harmonized):

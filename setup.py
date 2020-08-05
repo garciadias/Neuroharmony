@@ -50,7 +50,7 @@ setup(
     python_requires='>=3.6',
     test_suite="pytest",
     url="https://github.com/garciadias/Neuroharmony",
-    version="0.0.1.0",
+    version="0.1.1",
     zip_safe=False,
 )
 

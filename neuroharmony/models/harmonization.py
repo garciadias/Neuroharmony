@@ -12,7 +12,8 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from pandas.core.generic import NDFrame
 from pandas import Series, DataFrame, concat, merge
 from numpy import unique
-from neuroCombat import neuroCombat
+
+from neuroharmony.models.neuroCombat import neuroCombat
 
 
 def exclude_single_subject_groups(df, covariates):
