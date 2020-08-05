@@ -1,0 +1,398 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>neuroharmony.ComBat &mdash; Neuroharmony 0.0.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/project-template.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/gallery.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/gallery-binder.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/gallery-dataframe.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+        <script src="../_static/js/copybutton.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="neuroharmony.combine_freesurfer" href="neuroharmony.combine_freesurfer.html" />
+    <link rel="prev" title="neuroharmony.Neuroharmony" href="neuroharmony.Neuroharmony.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> Neuroharmony
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">Neuroharmony API</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../api.html#harmonization-models">Harmonization models</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="neuroharmony.Neuroharmony.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">neuroharmony</span></code>.Neuroharmony</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">neuroharmony</span></code>.ComBat</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#data-preparation">Data Preparation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#download-samples">Download samples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#kolmogorov-smirnov-test">Kolmogorov-Smirnov Test</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Neuroharmony</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../api.html">Neuroharmony API</a> &raquo;</li>
+        
+      <li><code class="xref py py-mod docutils literal notranslate"><span class="pre">neuroharmony</span></code>.ComBat</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/generated/neuroharmony.ComBat.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="neuroharmony-combat">
+<h1><code class="xref py py-mod docutils literal notranslate"><span class="pre">neuroharmony</span></code>.ComBat<a class="headerlink" href="#neuroharmony-combat" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="neuroharmony.ComBat">
+<em class="property">class </em><code class="sig-prename descclassname">neuroharmony.</code><code class="sig-name descname">ComBat</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">features</span></em>, <em class="sig-param"><span class="n">covariates</span></em>, <em class="sig-param"><span class="n">eliminate_variance</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/neuroharmony/models/harmonization.html#ComBat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuroharmony.ComBat" title="Permalink to this definition">¶</a></dt>
+<dd><p>ComBat model for harmonization.</p>
+<p>A wrapper to the <a class="reference external" href="https://github.com/ncullen93/neuroCombat">NeuroCombat</a> harmonization as described by
+<a class="reference external" href="https://doi.org/10.1016/j.neuroimage.2017.11.024">Fortin et al., (2018)</a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>features</strong><span class="classifier">list</span></dt><dd><p>List of features to be harmonized with ComBat.</p>
+</dd>
+<dt><strong>covariates :</strong></dt><dd><p>List of covariates for which the variance needs to be conserved.</p>
+</dd>
+<dt><strong>eliminate_variance :</strong></dt><dd><p>List of variables for which the variance needs to be eliminated.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Attributes</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>harmonized_</strong><span class="classifier">NDFrame of shape [n_subjects, n_features]</span></dt><dd><p>ComBat harmonized DataFrame.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="neuroharmony.ComBat.fit">
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">df</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/neuroharmony/models/harmonization.html#ComBat.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuroharmony.ComBat.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit the model.</p>
+<p>Fit all the transforms one after the other and transform the
+data, then fit the transformed data using the final estimator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>df: NDFrame of shape [n_subjects, n_features]</strong></dt><dd><p>Training data. Must fulfil input requirements of first step of the pipeline.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>self</strong><span class="classifier">ComBat</span></dt><dd><p>This estimator</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="neuroharmony.ComBat.fit_transform">
+<code class="sig-name descname">fit_transform</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">df</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/neuroharmony/models/harmonization.html#ComBat.fit_transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuroharmony.ComBat.fit_transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit to data, then transform it.</p>
+<p>Fits transformer to df and y with optional parameters fit_params and returns a transformed version of df.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>df: NDFrame of shape [n_subjects, n_features]</strong></dt><dd><p>Training set.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><a href="#id1"><span class="problematic" id="id2">harmonized_</span></a>: NDFrame of shape [n_samples, n_features_new]</dt><dd><p>Transformed array.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="neuroharmony.ComBat.transform">
+<code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">df</span></em>, <em class="sig-param"><span class="n">y</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/neuroharmony/models/harmonization.html#ComBat.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuroharmony.ComBat.transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run ComBat normalization.</p>
+<p>Applies trained model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>df: NDFrame of shape [n_subjects, n_features]</strong></dt><dd><p>Dataframe with data for each subject. The dataframe has to contain the features to be harmonized pandas
+the covariates which you want to use to harmonization.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>harmonized: NDFrame of shape [n_subjects, n_features]</dt><dd><p>Dataframe with the harmonized data.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>ValueError:</dt><dd><p>If there are missing features among the covariates or the features.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ixi</span> <span class="o">=</span> <span class="n">DataSet</span><span class="p">(</span><span class="s1">&#39;data/raw/IXI&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">data</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">features</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Left-Lateral-Ventricle&#39;</span><span class="p">,</span> <span class="s1">&#39;Left-Inf-Lat-Vent&#39;</span><span class="p">,</span> <span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">covariates</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Gender&#39;</span><span class="p">,</span> <span class="s1">&#39;Dataset&#39;</span><span class="p">,</span> <span class="s1">&#39;Age&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">combat</span> <span class="o">=</span> <span class="n">ComBat</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">covariates</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">harmonized</span> <span class="o">=</span> <span class="n">combat</span><span class="p">(</span><span class="n">ixi</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">harmonized</span>
+</pre></div>
+</div>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 33%" />
+<col style="width: 25%" />
+<col style="width: 9%" />
+<col style="width: 10%" />
+<col style="width: 4%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>subject_id</p></th>
+<th class="head"><p>Left-Lateral-Ventricle</p></th>
+<th class="head"><p>Left-Inf-Lat-Vent</p></th>
+<th class="head"><p>Gender</p></th>
+<th class="head"><p>Dataset</p></th>
+<th class="head"><p>Age</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>sub-002-00-2</p></td>
+<td><p>0.007666</p></td>
+<td><p>0.000134</p></td>
+<td><p>0</p></td>
+<td><p>2</p></td>
+<td><p>31</p></td>
+</tr>
+<tr class="row-odd"><td><p>sub-012-00-1</p></td>
+<td><p>0.003778</p></td>
+<td><p>0.000064</p></td>
+<td><p>1</p></td>
+<td><p>1</p></td>
+<td><p>14</p></td>
+</tr>
+<tr class="row-even"><td><p>sub-013-00-1</p></td>
+<td><p>0.012818</p></td>
+<td><p>0.000464</p></td>
+<td><p>1</p></td>
+<td><p>1</p></td>
+<td><p>17</p></td>
+</tr>
+<tr class="row-odd"><td><p>sub-014-00-1</p></td>
+<td><p>0.006289</p></td>
+<td><p>0.000167</p></td>
+<td><p>0</p></td>
+<td><p>1</p></td>
+<td><p>19</p></td>
+</tr>
+<tr class="row-even"><td><p>sub-015-00-1</p></td>
+<td><p>0.003310</p></td>
+<td><p>0.000154</p></td>
+<td><p>1</p></td>
+<td><p>1</p></td>
+<td><p>26</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<div style='clear:both'></div></div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="neuroharmony.combine_freesurfer.html" class="btn btn-neutral float-right" title="neuroharmony.combine_freesurfer" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="neuroharmony.Neuroharmony.html" class="btn btn-neutral float-left" title="neuroharmony.Neuroharmony" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Rafael Garcia-Dias, Creative Commons.
+      <span class="lastupdated">
+        Last updated on Aug 05, 2020.
+      </span>
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

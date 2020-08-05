@@ -1,0 +1,284 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>neuroharmony.models.metrics &mdash; Neuroharmony 0.0.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/project-template.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/gallery.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/gallery-binder.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/gallery-dataframe.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
+        <script src="../../../_static/js/copybutton.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home" alt="Documentation Home"> Neuroharmony
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">Neuroharmony API</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Neuroharmony</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>neuroharmony.models.metrics</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for neuroharmony.models.metrics</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Metrics for evaluation of the normalization.&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="p">(</span><span class="n">nested_scopes</span><span class="p">,</span> <span class="n">generators</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">absolute_import</span><span class="p">,</span>
+                        <span class="n">with_statement</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">unicode_literals</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">combinations</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">pandas</span> <span class="kn">import</span> <span class="n">DataFrame</span><span class="p">,</span> <span class="n">Series</span>
+<span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">ks_2samp</span>
+
+
+<span class="k">def</span> <span class="nf">check_vars</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">features</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Check if all variables in a list are present in a dataframe.&quot;&quot;&quot;</span>
+    <span class="n">features</span> <span class="o">=</span> <span class="n">Series</span><span class="p">(</span><span class="n">features</span><span class="p">)</span>
+    <span class="n">is_feature_present</span> <span class="o">=</span> <span class="n">features</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+    <span class="n">missing_features_str</span> <span class="o">=</span> <span class="s2">&quot;Missing features: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">features</span><span class="p">[</span><span class="o">~</span><span class="n">is_feature_present</span><span class="p">])</span>
+    <span class="k">assert</span> <span class="n">is_feature_present</span><span class="o">.</span><span class="n">all</span><span class="p">(),</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">missing_features_str</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="ks_test_grid"><a class="viewcode-back" href="../../../generated/neuroharmony.ks_test_grid.html#neuroharmony.ks_test_grid">[docs]</a><span class="k">def</span> <span class="nf">ks_test_grid</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">features</span><span class="p">,</span> <span class="n">sampling_variable</span><span class="o">=</span><span class="s1">&#39;scanner&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Calculate the Kolmogorov-Smirnov score for all pairs of scanners.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    df: NDFrame of shape [n_subjects, n_features]</span>
+<span class="sd">        DataFrame with the subjects data.</span>
+
+<span class="sd">    features: list</span>
+<span class="sd">        List of the features to be considered on the Kolmogorov-Smirnov test.</span>
+
+<span class="sd">    sampling_variable: str, default=&#39;scanner&#39;</span>
+<span class="sd">        Variable for which you want to group subjects.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    KS_by_variable: dict of NDFrames</span>
+<span class="sd">        Kolmogorov-Smirnov p-values to all pairs of instances in the sampling_variable column.</span>
+<span class="sd">        The keys in the dictionary are the variables in &#39;features&#39;. The values of each entry are square NDFrames of</span>
+<span class="sd">        shape [n_vars, n_vars].</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError:</span>
+<span class="sd">        If the list of variables contain any variable that is not present in df.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; ixi = DataSet(&#39;data/raw/IXI&#39;).data</span>
+<span class="sd">    &gt;&gt;&gt; features = [&#39;Left-Lateral-Ventricle&#39;, &#39;Left-Inf-Lat-Vent&#39;, ]</span>
+<span class="sd">    &gt;&gt;&gt; KS = ks_test_grid(df, features, &#39;scanner&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; KS[features[0]]</span>
+<span class="sd">    +--------------------------+----------------------+------------------------+--------------------+</span>
+<span class="sd">    |                          | SCANNER01-SCANNER01  | SCANNER02-SCANNER01    | SCANNER03-SCANNER01|</span>
+<span class="sd">    +==========================++=====================+========================+====================+</span>
+<span class="sd">    |SCANNER01-SCANNER01       | NaN                  | NaN                    | NaN                |</span>
+<span class="sd">    +--------------------------+----------------------+------------------------+--------------------+</span>
+<span class="sd">    |SCANNER02-SCANNER01       | 0.000759473          | NaN                    | NaN                |</span>
+<span class="sd">    +--------------------------+----------------------+------------------------+--------------------+</span>
+<span class="sd">    |SCANNER03-SCANNER01       | 0.0539998            | 0.625887               | NaN                |</span>
+<span class="sd">    +--------------------------+----------------------+------------------------+--------------------+</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">check_vars</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">features</span><span class="p">)</span>
+    <span class="n">groups</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">sampling_variable</span><span class="p">)</span>
+    <span class="n">scanners_list</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">sampling_variable</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+    <span class="n">scanners_list</span> <span class="o">=</span> <span class="n">scanners_list</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">sampling_variable</span><span class="p">]</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">unique</span><span class="p">())]</span>
+    <span class="n">KS_by_variable</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">features</span><span class="p">:</span>
+        <span class="n">KS</span> <span class="o">=</span> <span class="n">DataFrame</span><span class="p">([],</span> <span class="n">index</span><span class="o">=</span><span class="n">scanners_list</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">scanners_list</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">scanner_batch</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">array_split</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">combinations</span><span class="p">(</span><span class="n">scanners_list</span><span class="p">,</span> <span class="mi">2</span><span class="p">))),</span> <span class="mi">80</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">scanner_a</span><span class="p">,</span> <span class="n">scanner_b</span> <span class="ow">in</span> <span class="n">scanner_batch</span><span class="p">:</span>
+                <span class="n">group_a</span> <span class="o">=</span> <span class="n">groups</span><span class="o">.</span><span class="n">get_group</span><span class="p">(</span><span class="n">scanner_a</span><span class="p">)[</span><span class="n">var</span><span class="p">]</span>
+                <span class="n">group_b</span> <span class="o">=</span> <span class="n">groups</span><span class="o">.</span><span class="n">get_group</span><span class="p">(</span><span class="n">scanner_b</span><span class="p">)[</span><span class="n">var</span><span class="p">]</span>
+                <span class="n">KS</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">scanner_b</span><span class="p">][</span><span class="n">scanner_a</span><span class="p">]</span> <span class="o">=</span> <span class="n">ks_2samp</span><span class="p">(</span><span class="n">group_a</span><span class="p">,</span> <span class="n">group_b</span><span class="p">)</span><span class="o">.</span><span class="n">pvalue</span>
+        <span class="n">KS_by_variable</span><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="o">=</span> <span class="n">KS</span>
+    <span class="k">return</span> <span class="n">KS_by_variable</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Rafael Garcia-Dias, Creative Commons.
+      <span class="lastupdated">
+        Last updated on Aug 05, 2020.
+      </span>
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

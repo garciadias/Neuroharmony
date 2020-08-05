@@ -1,0 +1,593 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>neuroharmony.data.combine_tools &mdash; Neuroharmony 0.0.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/project-template.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/gallery.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/gallery-binder.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/gallery-dataframe.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
+        <script src="../../../_static/js/copybutton.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home" alt="Documentation Home"> Neuroharmony
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">Neuroharmony API</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Neuroharmony</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>neuroharmony.data.combine_tools</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for neuroharmony.data.combine_tools</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Combining tools.&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="kn">from</span> <span class="nn">neuroharmony.data.collect_tools</span> <span class="kn">import</span> <span class="n">find_all_files_by_name</span>
+<span class="kn">from</span> <span class="nn">neuroharmony.data.rois</span> <span class="kn">import</span> <span class="n">rois</span>
+
+
+<span class="k">def</span> <span class="nf">_files_exists</span><span class="p">(</span><span class="n">directory_path</span><span class="p">,</span> <span class="n">file_pattern</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Verify if a file exists and is the unique file of that kind in the folder.&quot;&quot;&quot;</span>
+    <span class="n">file_search</span> <span class="o">=</span> <span class="n">find_all_files_by_name</span><span class="p">(</span><span class="n">directory_path</span><span class="p">,</span> <span class="n">file_pattern</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">file_search</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">file_search</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">file_search</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">file_search</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;There are more than one </span><span class="si">%s</span><span class="s2"> file in this site.&quot;</span> <span class="o">%</span> <span class="n">file_pattern</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="combine_freesurfer"><a class="viewcode-back" href="../../../generated/neuroharmony.combine_freesurfer.html#neuroharmony.combine_freesurfer">[docs]</a><span class="k">def</span> <span class="nf">combine_freesurfer</span><span class="p">(</span><span class="n">freesurfer_path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Combine aparc and aseg data files in a single csv files.</span>
+
+<span class="sd">    It uses the list in columns_name.list file to select the relevant features in the freesurfer output.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    freesurfer_path : string</span>
+<span class="sd">        The path to the subject directories.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    combined : NDFrame of shape [n_subjects, n_features]</span>
+<span class="sd">        A DataFrame with the FreeSurfer volumetric data for each subject.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">aseg_stats</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">freesurfer_path</span><span class="si">}</span><span class="s2">/aseg_stats.txt&quot;</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">lh_aparc_stats</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">freesurfer_path</span><span class="si">}</span><span class="s2">/lh_aparc_stats.txt&quot;</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">rh_aparc_stats</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">freesurfer_path</span><span class="si">}</span><span class="s2">/rh_aparc_stats.txt&quot;</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">combined</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">aseg_stats</span><span class="p">,</span> <span class="n">lh_aparc_stats</span><span class="p">,</span> <span class="n">left_on</span><span class="o">=</span><span class="s2">&quot;Measure:volume&quot;</span><span class="p">,</span> <span class="n">right_on</span><span class="o">=</span><span class="s2">&quot;lh.aparc.volume&quot;</span><span class="p">)</span>
+    <span class="n">combined</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">combined</span><span class="p">,</span> <span class="n">rh_aparc_stats</span><span class="p">,</span> <span class="n">left_on</span><span class="o">=</span><span class="s2">&quot;Measure:volume&quot;</span><span class="p">,</span> <span class="n">right_on</span><span class="o">=</span><span class="s2">&quot;rh.aparc.volume&quot;</span><span class="p">)</span>
+    <span class="n">combined</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;Measure:volume&quot;</span><span class="p">:</span> <span class="s2">&quot;participant_id&quot;</span><span class="p">},</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">combined</span><span class="o">.</span><span class="n">participant_id</span> <span class="o">=</span> <span class="n">combined</span><span class="o">.</span><span class="n">participant_id</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="n">combined</span> <span class="o">=</span> <span class="n">combined</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">&quot;participant_id&quot;</span><span class="p">)[</span><span class="n">rois</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">combined</span></div>
+
+
+<div class="viewcode-block" id="combine_mriqc"><a class="viewcode-back" href="../../../generated/neuroharmony.combine_mriqc.html#neuroharmony.combine_mriqc">[docs]</a><span class="k">def</span> <span class="nf">combine_mriqc</span><span class="p">(</span><span class="n">mri_path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Combine group_T1w and mclf files from the MRIQC output.</span>
+
+<span class="sd">    It uses the list in columns_name.list file to select the relevant features in the freesurfer output.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mri_path: string</span>
+<span class="sd">        The path to a BIDS directory.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    combined : NDFrame of shape [n_subjects, n_features]</span>
+<span class="sd">        A DataFrame with the MRIQC information for each subject.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">iqm_path</span> <span class="o">=</span> <span class="n">_files_exists</span><span class="p">(</span><span class="n">mri_path</span><span class="p">,</span> <span class="s2">&quot;group_T1w.tsv&quot;</span><span class="p">)</span>
+    <span class="n">pred_path</span> <span class="o">=</span> <span class="n">_files_exists</span><span class="p">(</span><span class="n">mri_path</span><span class="p">,</span> <span class="s2">&quot;mclf*&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">iqm_path</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">pred_path</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;MRIQC files not found in </span><span class="si">{</span><span class="n">mri_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">iqm</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">iqm_path</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">pred</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">pred_path</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">pred</span><span class="p">[</span><span class="s2">&quot;bids_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;sub-&quot;</span> <span class="o">+</span> <span class="n">pred</span><span class="o">.</span><span class="n">subject_id</span> <span class="o">+</span> <span class="s2">&quot;_T1w&quot;</span>
+    <span class="n">pred</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="s2">&quot;subject_id&quot;</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">combined</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">iqm</span><span class="p">,</span> <span class="n">pred</span><span class="p">,</span> <span class="n">left_on</span><span class="o">=</span><span class="s2">&quot;bids_name&quot;</span><span class="p">,</span> <span class="n">right_on</span><span class="o">=</span><span class="s2">&quot;bids_name&quot;</span><span class="p">)</span>
+    <span class="n">combined</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;bids_name&quot;</span><span class="p">:</span> <span class="s2">&quot;participant_id&quot;</span><span class="p">},</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">combined</span><span class="o">.</span><span class="n">participant_id</span> <span class="o">=</span> <span class="p">[</span><span class="n">subject_line</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">subject_line</span> <span class="ow">in</span> <span class="n">combined</span><span class="o">.</span><span class="n">participant_id</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)]</span>
+    <span class="n">combined</span> <span class="o">=</span> <span class="n">combined</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">&quot;participant_id&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">combined</span></div>
+
+
+<span class="k">class</span> <span class="nc">Site</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A class for site definition.</span>
+
+<span class="sd">    Tools for collecting and combining data from a site given a path to the site data.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dir_path: pathlib.PosixPath</span>
+<span class="sd">        Path to the data of the site. The following files are required: freesurferData.csv, participants.tsv,</span>
+<span class="sd">        group_T1w.tsv, mclf*.csv, and Qoala*.csv. These files should be inside scanner folders.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data: NDFrame</span>
+<span class="sd">        Dataframe containing the combined data of all scanners in the site.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; ixi = Site(Path(data/raw/IXI))</span>
+<span class="sd">    &gt;&gt;&gt; ixi.data</span>
+
+<span class="sd">    +---------------+-------------+--------------+-------------+----------+---+----+</span>
+<span class="sd">    |               |3rd-Ventricle|4th-Ventricle | Age         |Brain-Stem|...|site|</span>
+<span class="sd">    +---------------+-------------+--------------+-------------+----------+---+----+</span>
+<span class="sd">    |participant_id |                                                              |</span>
+<span class="sd">    +---------------+-------------+--------------+-------------+----------+---+----+</span>
+<span class="sd">    |sub-035-0      |0.000528     | 0.000607     | 37.144422   |0.015725  |...|IXI |</span>
+<span class="sd">    +---------------+-------------+--------------+-------------+----------+---+----+</span>
+<span class="sd">    |sub-230-0      |0.000751     | 0.001479     | 21.152635   |0.013917  |...|IXI |</span>
+<span class="sd">    +---------------+-------------+--------------+-------------+----------+---+----+</span>
+<span class="sd">    |sub-231-0      |0.000861     | 0.001068     | 58.992471   |0.012547  |...|IXI |</span>
+<span class="sd">    +---------------+-------------+--------------+-------------+----------+---+----+</span>
+<span class="sd">    |sub-232-0      |0.000478     | 0.000502     | 28.810404   |0.013322  |...|IXI |</span>
+<span class="sd">    +---------------+-------------+--------------+-------------+----------+---+----+</span>
+<span class="sd">    |sub-233-0      |0.000420     | 0.000725     | 26.754278   |0.014778  |...|IXI |</span>
+<span class="sd">    +---------------+-------------+--------------+-------------+----------+---+----+</span>
+<span class="sd">    &gt;&gt;&gt; ixi.SCANNER01.data</span>
+
+<span class="sd">    +---------------+----------------------+-----------------+---+-------------+</span>
+<span class="sd">    |               |Left-Lateral-Ventricle|Left-Inf-Lat-Vent|...|scanner      |</span>
+<span class="sd">    +---------------+----------------------+-----------------+---+-------------+</span>
+<span class="sd">    |participant_id |                                                          |</span>
+<span class="sd">    +---------------+----------------------+-----------------+---+-------------+</span>
+<span class="sd">    |sub-002-2	    |      0.003274	       |     0.000123	 |...|IXI-SCANNER01|</span>
+<span class="sd">    +---------------+----------------------+-----------------+---+-------------+</span>
+<span class="sd">    |sub-016-2	    |      0.015889	       |     0.000380	 |...|IXI-SCANNER01|</span>
+<span class="sd">    +---------------+----------------------+-----------------+---+-------------+</span>
+<span class="sd">    |sub-017-2	    |      0.007326	       |     0.000148	 |...|IXI-SCANNER01|</span>
+<span class="sd">    +---------------+----------------------+-----------------+---+-------------+</span>
+<span class="sd">    |...	        |         ...	       |       ...       |...|     ...	   |</span>
+<span class="sd">    +---------------+----------------------+-----------------+---+-------------+</span>
+<span class="sd">    |sub-582-2	    |      0.002624	       |     0.000146	 |...|IXI-SCANNER01|</span>
+<span class="sd">    +---------------+----------------------+-----------------+---+-------------+</span>
+<span class="sd">    |sub-584-2	    |      0.004854	       |     0.000188	 |...|IXI-SCANNER01|</span>
+<span class="sd">    +---------------+----------------------+-----------------+---+-------------+</span>
+<span class="sd">    |sub-585-2	    |      0.004373	       |     0.000218	 |...|IXI-SCANNER01|</span>
+<span class="sd">    +---------------+----------------------+-----------------+---+-------------+</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dir_path</span><span class="p">,</span> <span class="n">merge_on</span><span class="o">=</span><span class="s2">&quot;image_id&quot;</span><span class="p">,</span> <span class="n">renamed_id</span><span class="o">=</span><span class="s2">&quot;participant_id&quot;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dir_path</span> <span class="o">=</span> <span class="n">dir_path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">merge_on</span> <span class="o">=</span> <span class="n">merge_on</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">renamed_id</span> <span class="o">=</span> <span class="n">renamed_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">dir_path</span><span class="o">.</span><span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_get_scanners</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_get_scanners</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Collect data for the site.</span>
+
+<span class="sd">        This method verifies if the site has multiples scanners and combine the data from freesurfer, MRIQC and Qoala.</span>
+<span class="sd">        If the data is not available it returns an empty dataframe.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dir_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dir_path</span><span class="o">.</span><span class="n">name</span>
+        <span class="n">subdirs</span> <span class="o">=</span> <span class="p">[</span><span class="n">subpath</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">subpath</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dir_path</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">subpath</span><span class="o">.</span><span class="n">is_dir</span><span class="p">()]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">subdirs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scanner_list</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_get_files</span><span class="p">()</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_complete</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_load_files</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_combine_files</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;scanner&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">renamed_id</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;-00&quot;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">complete_scanners</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scanner_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">subdir</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dir_name</span><span class="si">}</span><span class="s2">-&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">subdir</span> <span class="ow">in</span> <span class="n">subdirs</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">scanner_name</span> <span class="ow">in</span> <span class="n">subdirs</span><span class="p">:</span>
+                <span class="n">scanner</span> <span class="o">=</span> <span class="n">Scanner</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">dir_path</span> <span class="o">/</span> <span class="n">Path</span><span class="p">(</span><span class="n">scanner_name</span><span class="p">),</span> <span class="n">merge_on</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">merge_on</span><span class="p">,</span> <span class="n">renamed_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">renamed_id</span>
+                <span class="p">)</span>
+                <span class="n">scanner_name</span> <span class="o">=</span> <span class="n">scanner_name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dir_name</span><span class="si">}</span><span class="s2">-&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scanner_name</span><span class="p">,</span> <span class="n">scanner</span><span class="p">)</span>
+                <span class="n">scanner</span><span class="o">.</span><span class="n">_get_files</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_combine_all_scanners</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+
+    <span class="k">def</span> <span class="nf">_files_exists</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">directory_path</span><span class="p">,</span> <span class="n">file_pattern</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Verify if a file exists and is the unique file of that kind in the folder.&quot;&quot;&quot;</span>
+        <span class="n">file_search</span> <span class="o">=</span> <span class="n">find_all_files_by_name</span><span class="p">(</span><span class="n">directory_path</span><span class="p">,</span> <span class="n">file_pattern</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">file_search</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">file_search</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">file_search</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">file_search</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;There are more than one </span><span class="si">%s</span><span class="s2"> file in this site.&quot;</span> <span class="o">%</span> <span class="n">file_pattern</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Verify if each of the files exist and is unique.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">freesurferData_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_files_exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dir_path</span><span class="p">,</span> <span class="s2">&quot;freesurferData.csv&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">participants_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_files_exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dir_path</span><span class="p">,</span> <span class="s2">&quot;participants.tsv&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iqm_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_files_exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dir_path</span><span class="p">,</span> <span class="s2">&quot;group_T1w.tsv&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pred_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_files_exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dir_path</span><span class="p">,</span> <span class="s2">&quot;mclf*csv&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">qoala_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_files_exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dir_path</span><span class="p">,</span> <span class="s2">&quot;Qoala*.csv&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_is_complete</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Verify if all necessary files are there.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">all</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">freesurferData_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">participants_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">iqm_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pred_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">qoala_path</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_load_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">freesurferData</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">freesurferData_path</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">participants</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">participants_path</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iqm</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iqm_path</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pred</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pred_path</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">qoala</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">qoala_path</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_combine_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">merge_on</span> <span class="ow">in</span> <span class="n">dataframe</span>
+            <span class="k">for</span> <span class="n">dataframe</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">freesurferData</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">participants</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">iqm</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pred</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">qoala</span><span class="p">]</span>
+        <span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">participants</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">freesurferData</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">merge_on</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">&quot;inner&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">iqm</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">merge_on</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">&quot;inner&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pred</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">merge_on</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">&quot;inner&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">qoala</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">merge_on</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">&quot;inner&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">renamed_id</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">merge_on</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;The field </span><span class="si">%s</span><span class="s2"> is not found in </span><span class="si">%s</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">merge_on</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dir_path</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span><span class="s2">&quot;&quot;</span><span class="p">],</span> <span class="n">index</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">],</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">renamed_id</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_combine_all_scanners</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;If there are multiple scanners on a site they will be combined in the attribute &#39;data&#39;.&quot;&quot;&quot;</span>
+        <span class="n">n_scanners</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scanner_list</span><span class="p">)</span>
+        <span class="n">participant_id_format</span> <span class="o">=</span> <span class="s2">&quot;-</span><span class="si">%%</span><span class="s2">0</span><span class="si">%d</span><span class="s2">d&quot;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">n_scanners</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">scanner_id</span><span class="p">,</span> <span class="n">scanner_name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scanner_list</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scanner_name</span><span class="p">)</span><span class="o">.</span><span class="n">_is_complete</span><span class="p">():</span>
+                <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scanner_name</span><span class="p">)</span><span class="o">.</span><span class="n">_load_files</span><span class="p">()</span>
+                <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scanner_name</span><span class="p">)</span><span class="o">.</span><span class="n">_combine_files</span><span class="p">()</span>
+                <span class="n">scanner_data</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scanner_name</span><span class="p">)</span><span class="o">.</span><span class="n">data</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">scanner_data</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">scanner_data</span><span class="p">[</span><span class="s2">&quot;scanner&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">-</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">scanner_name</span><span class="p">)</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">id_appendix</span> <span class="o">=</span> <span class="n">participant_id_format</span> <span class="o">%</span> <span class="n">scanner_id</span>
+                        <span class="n">scanner_data</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">scanner_data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">renamed_id</span><span class="p">]</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">id_appendix</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dir_path</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">complete_scanners</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">scanner_name</span> <span class="k">for</span> <span class="n">scanner_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">scanner_list</span> <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scanner_name</span><span class="p">)</span><span class="o">.</span><span class="n">_is_complete</span><span class="p">()</span>
+        <span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">complete_scanners</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scanner</span><span class="p">)</span><span class="o">.</span><span class="n">data</span> <span class="k">for</span> <span class="n">scanner</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">complete_scanners</span><span class="p">],</span> <span class="n">sort</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+
+
+<span class="k">class</span> <span class="nc">Scanner</span><span class="p">(</span><span class="n">Site</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A class for scanner definition.</span>
+
+<span class="sd">    Tools for collecting and combining data from a single scanner given a path to the scanner data.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dir_path: pathlib.PosixPath</span>
+<span class="sd">        Path to the data of the scanner. The following files are required: freesurferData.csv, participants.tsv,</span>
+<span class="sd">        group_T1w.tsv, mclf*.csv, and Qoala*.csv.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data: NDFrame</span>
+<span class="sd">        Dataframe containing the combined data of all scanners in the site.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; scanner_01 = Site(Path(data/raw/IXI/SCANNER01))</span>
+<span class="sd">    &gt;&gt;&gt; scanner_01.data</span>
+<span class="sd">                Left-Lateral-Ventricle	 Left-Inf-Lat-Vent ... scanner</span>
+<span class="sd">    participant_id</span>
+<span class="sd">    sub-002-2	0.003274	             0.000123	... IXI-SCANNER01</span>
+<span class="sd">    sub-016-2	0.015889	             0.000380	... IXI-SCANNER01</span>
+<span class="sd">    sub-017-2	0.007326	             0.000148	... IXI-SCANNER01</span>
+<span class="sd">    ...	        ...	                     ...	    ...	...</span>
+<span class="sd">    sub-582-2	0.002624	             0.000146	... IXI-SCANNER01</span>
+<span class="sd">    sub-584-2	0.004854	             0.000188	... IXI-SCANNER01</span>
+<span class="sd">    sub-585-2	0.004373	             0.000218	... IXI-SCANNER01</span>
+
+<span class="sd">    [313 rows × 179 columns]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dir_path</span><span class="p">,</span> <span class="n">merge_on</span><span class="o">=</span><span class="s2">&quot;image_id&quot;</span><span class="p">,</span> <span class="n">renamed_id</span><span class="o">=</span><span class="s2">&quot;participant_id&quot;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dir_path</span> <span class="o">=</span> <span class="n">dir_path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">dir_path</span><span class="o">.</span><span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">merge_on</span> <span class="o">=</span> <span class="n">merge_on</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">renamed_id</span> <span class="o">=</span> <span class="n">renamed_id</span>
+
+
+<span class="k">class</span> <span class="nc">DataSet</span><span class="p">(</span><span class="n">Site</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A class for dataset definition.</span>
+
+<span class="sd">    Tools for collecting and combining data from all sites given a path to a BIDS dataset.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dir_path: pathlib.PosixPath</span>
+<span class="sd">        Path to the data of the site. The following files are required: freesurferData.csv, participants.tsv,</span>
+<span class="sd">        group_T1w.tsv, mclf*.csv, and Qoala*.csv. These files should be inside scanner folders which should be inside</span>
+<span class="sd">        site folders.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data: NDFrame</span>
+<span class="sd">        Dataframe containing the combined data of all scanners in the site.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; DATASET = DataSet(Path(data/raw/))</span>
+<span class="sd">    &gt;&gt;&gt; Data.data</span>
+<span class="sd">                         3rd-Ventricle  4th-Ventricle  Age          Brain-Stem ... site</span>
+<span class="sd">    participant_id</span>
+<span class="sd">    sub-035-00-00        0.000528       0.000607       37.144422    0.015725   ... IXI</span>
+<span class="sd">    sub-230-00-00        0.000751       0.001479       21.152635    0.013917   ... IXI</span>
+<span class="sd">    sub-231-00-00        0.000861       0.001068       58.992471    0.012547   ... IXI</span>
+<span class="sd">    ...                  ...            ...            ...          ...        ... ...</span>
+<span class="sd">    sub-45-00-33	     0.000570	    0.001581	   21.0	        0.011838   ... MoralJudgment</span>
+<span class="sd">    sub-46-00-33	     0.000552	    0.001528	   36.0	        0.013947   ... MoralJudgment</span>
+<span class="sd">    sub-47-00-33	     0.000609	    0.000893	   20.0	        0.013515   ... MoralJudgment</span>
+
+<span class="sd">    [9303 rows × 180 columns]</span>
+
+<span class="sd">    &gt;&gt;&gt; DATASET.IXI.data</span>
+<span class="sd">                         3rd-Ventricle  4th-Ventricle  Age          Brain-Stem ... site</span>
+<span class="sd">    participant_id</span>
+<span class="sd">    sub-035-0            0.000528       0.000607       37.144422    0.015725   ... IXI</span>
+<span class="sd">    sub-230-0            0.000751       0.001479       21.152635    0.013917   ... IXI</span>
+<span class="sd">    sub-231-0            0.000861       0.001068       58.992471    0.012547   ... IXI</span>
+<span class="sd">    sub-232-0            0.000478       0.000502       28.810404    0.013322   ... IXI</span>
+<span class="sd">    sub-233-0            0.000420       0.000725       26.754278    0.014778   ... IXI</span>
+
+<span class="sd">    [535 rows x 180 columns]</span>
+
+<span class="sd">    &gt;&gt;&gt; DATASET.IXI.SCANNER01.data</span>
+<span class="sd">                Left-Lateral-Ventricle	 Left-Inf-Lat-Vent ... scanner</span>
+<span class="sd">    participant_id</span>
+<span class="sd">    sub-002-2	0.003274	             0.000123	... IXI-SCANNER01</span>
+<span class="sd">    sub-016-2	0.015889	             0.000380	... IXI-SCANNER01</span>
+<span class="sd">    sub-017-2	0.007326	             0.000148	... IXI-SCANNER01</span>
+<span class="sd">    ...	        ...	                     ...	    ...	...</span>
+<span class="sd">    sub-582-2	0.002624	             0.000146	... IXI-SCANNER01</span>
+<span class="sd">    sub-584-2	0.004854	             0.000188	... IXI-SCANNER01</span>
+<span class="sd">    sub-585-2	0.004373	             0.000218	... IXI-SCANNER01</span>
+
+<span class="sd">    [313 rows × 179 columns]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dir_path</span><span class="p">,</span> <span class="n">merge_on</span><span class="o">=</span><span class="s2">&quot;image_id&quot;</span><span class="p">,</span> <span class="n">renamed_id</span><span class="o">=</span><span class="s2">&quot;participant_id&quot;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dir_path</span> <span class="o">=</span> <span class="n">dir_path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;All sites&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">merge_on</span> <span class="o">=</span> <span class="n">merge_on</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">renamed_id</span> <span class="o">=</span> <span class="n">renamed_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_get_sites</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_combine_all_sites</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_get_sites</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">site_paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">subpath</span> <span class="k">for</span> <span class="n">subpath</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dir_path</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">subpath</span><span class="o">.</span><span class="n">is_dir</span><span class="p">()]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sites</span> <span class="o">=</span> <span class="p">[</span><span class="n">site_path</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">site_path</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_paths</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">not_empty_sites</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">site_path</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_paths</span><span class="p">:</span>
+            <span class="n">site</span> <span class="o">=</span> <span class="n">Site</span><span class="p">(</span><span class="n">site_path</span><span class="p">,</span> <span class="n">merge_on</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">merge_on</span><span class="p">,</span> <span class="n">renamed_id</span><span class="o">=</span><span class="s2">&quot;participant_id&quot;</span><span class="p">)</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">site</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">site</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">not_empty_sites</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">site</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_combine_all_sites</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">n_sites</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">not_empty_sites</span><span class="p">)</span>
+        <span class="n">participant_id_format</span> <span class="o">=</span> <span class="s2">&quot;-</span><span class="si">%%</span><span class="s2">0</span><span class="si">%d</span><span class="s2">d&quot;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">n_sites</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">n_sites</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">site_id</span><span class="p">,</span> <span class="n">site_name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">not_empty_sites</span><span class="p">):</span>
+                <span class="n">id_appendix</span> <span class="o">=</span> <span class="n">participant_id_format</span> <span class="o">%</span> <span class="n">site_id</span>
+                <span class="n">site</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">site_name</span><span class="p">)</span>
+                <span class="n">site</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">site</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">index</span> <span class="o">+</span> <span class="n">id_appendix</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">site</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="kc">False</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">DATASET</span> <span class="o">=</span> <span class="n">DataSet</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;data/raw/&quot;</span><span class="p">))</span>
+    <span class="n">DATASET</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s2">&quot;data/processed/dataset.csv&quot;</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Rafael Garcia-Dias, Creative Commons.
+      <span class="lastupdated">
+        Last updated on Aug 05, 2020.
+      </span>
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

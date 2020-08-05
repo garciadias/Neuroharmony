@@ -1,0 +1,392 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>neuroharmony.data.collect_tools &mdash; Neuroharmony 0.0.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/project-template.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/gallery.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/gallery-binder.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/gallery-dataframe.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
+        <script src="../../../_static/js/copybutton.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home" alt="Documentation Home"> Neuroharmony
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">Neuroharmony API</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Neuroharmony</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>neuroharmony.data.collect_tools</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for neuroharmony.data.collect_tools</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Collect tools.&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span> <span class="nn">requests</span> <span class="kn">import</span> <span class="n">get</span>
+<span class="kn">from</span> <span class="nn">shutil</span> <span class="kn">import</span> <span class="n">copyfile</span>
+<span class="kn">from</span> <span class="nn">zipfile</span> <span class="kn">import</span> <span class="n">ZipFile</span>
+<span class="kn">import</span> <span class="nn">joblib</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">from</span> <span class="nn">pandas</span> <span class="kn">import</span> <span class="n">read_csv</span>
+<span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
+
+
+<span class="k">def</span> <span class="nf">_download</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">filepath</span><span class="p">):</span>
+    <span class="n">dirpath</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span>
+    <span class="n">Path</span><span class="p">(</span><span class="n">dirpath</span><span class="p">)</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;user-agent&quot;</span><span class="p">:</span> <span class="s2">&quot;Wget/1.16 (linux-gnu)&quot;</span><span class="p">}</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">)</span>
+    <span class="n">total_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;content-length&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+    <span class="n">block_size</span> <span class="o">=</span> <span class="mi">1024</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">total</span><span class="o">=</span><span class="n">total_size</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s2">&quot;iB&quot;</span><span class="p">,</span> <span class="n">unit_scale</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">r</span><span class="o">.</span><span class="n">iter_content</span><span class="p">(</span><span class="n">block_size</span><span class="p">):</span>
+            <span class="n">t</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">t</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="fetch_mri_data"><a class="viewcode-back" href="../../../generated/neuroharmony.fetch_mri_data.html#neuroharmony.fetch_mri_data">[docs]</a><span class="k">def</span> <span class="nf">fetch_mri_data</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Fetch example of MRI dataset.</span>
+
+<span class="sd">    The dataset is a replication of the Bert subject released with the FreeSurfer software for testing.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+<span class="sd">    mri_path: str</span>
+<span class="sd">        The path for the MRI data.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">script_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
+    <span class="n">filepath</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">script_path</span><span class="si">}</span><span class="s2">/../../data/mri.zip&quot;</span>
+    <span class="n">unzip_folder</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;/mri/&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">Path</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="n">_download</span><span class="p">(</span><span class="s2">&quot;https://www.dropbox.com/s/kcbq0266bcab3bx/ds002936.zip&quot;</span><span class="p">,</span> <span class="n">filepath</span><span class="p">)</span>
+        <span class="n">Path</span><span class="p">(</span><span class="n">unzip_folder</span><span class="p">)</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">zip_file</span> <span class="o">=</span> <span class="n">ZipFile</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span>
+        <span class="n">zip_file</span><span class="o">.</span><span class="n">extractall</span><span class="p">(</span><span class="n">unzip_folder</span><span class="p">)</span>
+        <span class="n">zip_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">unzip_folder</span><span class="p">)</span><span class="o">.</span><span class="n">absolute</span><span class="p">())</span></div>
+
+
+<div class="viewcode-block" id="fetch_sample"><a class="viewcode-back" href="../../../generated/neuroharmony.fetch_sample.html#neuroharmony.fetch_sample">[docs]</a><span class="k">def</span> <span class="nf">fetch_sample</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Fetch a sample of FreeSurfer derived volumes in the Neuroharmony format.</span>
+
+<span class="sd">    Fetch the FreeSurfer derived volumes of some subjects in the</span>
+<span class="sd">    `ADHD200 &lt;http://fcon_1000.projects.nitrc.org/indi/adhd200/index.html&gt;`_ and in</span>
+<span class="sd">    the `PPMI &lt;http://www.ppmi-info.org/&gt;`_ datasets.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+<span class="sd">    dataset: NDFrame of shape [n_subjects, n_features]</span>
+<span class="sd">        DataFrame with data from ADHD200 and the PPMI subjects in the  Neuroharmony format.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">script_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
+    <span class="n">filepath</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">script_path</span><span class="si">}</span><span class="s2">/../../data/test_sample.csv&quot;</span>
+    <span class="n">_download</span><span class="p">(</span><span class="s2">&quot;https://www.dropbox.com/s/mxcaqx2y29n09rp/test_sample.csv&quot;</span><span class="p">,</span> <span class="n">filepath</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">read_csv</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="fetch_trained_model"><a class="viewcode-back" href="../../../generated/neuroharmony.fetch_trained_model.html#neuroharmony.fetch_trained_model">[docs]</a><span class="k">def</span> <span class="nf">fetch_trained_model</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Fetch Neuroharmony pre-trained model.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+<span class="sd">    neuroharmony: Neuroharmony class</span>
+<span class="sd">        Pre-trained Neuroharmony model.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">script_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
+    <span class="n">filepath</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">script_path</span><span class="si">}</span><span class="s2">/../../data/neuroharmony.pkl.gz&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">Path</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="n">_download</span><span class="p">(</span><span class="s2">&quot;https://www.dropbox.com/s/s3521oqd3fpi0ll/neuroharmony.pkl.gz&quot;</span><span class="p">,</span> <span class="n">filepath</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">joblib</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="n">Path</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span><span class="o">.</span><span class="n">unlinke</span><span class="p">()</span>
+        <span class="n">_download</span><span class="p">(</span><span class="s2">&quot;https://www.dropbox.com/s/s3521oqd3fpi0ll/neuroharmony.pkl.gz&quot;</span><span class="p">,</span> <span class="n">filepath</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">joblib</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">find_all_files_by_name</span><span class="p">(</span><span class="n">directory_path</span><span class="p">,</span> <span class="n">file_pattern</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Find all files in a folder.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+<span class="sd">    directory_path: string</span>
+<span class="sd">        The path for a giving folder.</span>
+
+<span class="sd">    file_pattern: string</span>
+<span class="sd">        File extension (.csv, .pdf, .txt, ...).</span>
+
+<span class="sd">    depth: int</span>
+<span class="sd">        Depth of the file search.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+<span class="sd">    filelist: list</span>
+<span class="sd">        List of paths to the found files in the format of pathlib.PosixPath.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">filelist</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">level</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">depth</span><span class="p">):</span>
+        <span class="n">filelist</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">directory_path</span><span class="p">)</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">level</span> <span class="o">*</span> <span class="p">[</span><span class="s2">&quot;*&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">file_pattern</span><span class="p">]))))</span>
+    <span class="k">return</span> <span class="n">filelist</span>
+
+
+<span class="k">def</span> <span class="nf">collect_datafile</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">root_path</span><span class="p">,</span> <span class="n">local_path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Collect a datafile.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+<span class="sd">    filepath: string or pathlib.PosixPath</span>
+<span class="sd">        The path for the file to be copied.</span>
+
+<span class="sd">    root_path: string</span>
+<span class="sd">        The path root to the origin of the data.</span>
+
+<span class="sd">    local_path: string</span>
+<span class="sd">        The path to the local folder you want to save the copied data.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+<span class="sd">    file_exists: boolean</span>
+<span class="sd">        Returns True if the files were copied correctly and False otherwise.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">filepath</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+    <span class="n">local_final_path</span> <span class="o">=</span> <span class="n">filepath</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">root_path</span><span class="p">,</span> <span class="n">local_path</span><span class="p">)</span>
+    <span class="n">Path</span><span class="p">(</span><span class="n">local_final_path</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">copyfile</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">local_final_path</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">local_final_path</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">collect_multiple_datafile</span><span class="p">(</span><span class="n">filepath_list</span><span class="p">,</span> <span class="n">root_path</span><span class="p">,</span> <span class="n">local_path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Collect a list of datafiles.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+<span class="sd">    filepath_list: list of strings or pathlib.PosixPath</span>
+<span class="sd">        List of paths for the file to be copied.</span>
+
+<span class="sd">    root_path: string</span>
+<span class="sd">        The path root to the origin of the data.</span>
+
+<span class="sd">    local_path: string</span>
+<span class="sd">        The path to the local folder you want to save the copied data.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+<span class="sd">    file_exists: boolean</span>
+<span class="sd">        Returns True if the files were copied correctly and False otherwise.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">filepath</span> <span class="ow">in</span> <span class="n">filepath_list</span><span class="p">:</span>
+        <span class="n">collect_datafile</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">root_path</span><span class="p">,</span> <span class="n">local_path</span><span class="p">)</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">SERVER_ROOT</span> <span class="o">=</span> <span class="s2">&quot;/media/kcl_2/HDD/SynologyDrive&quot;</span>
+    <span class="n">PARTICIPANT_ROOT</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/BIDS_data/&quot;</span> <span class="o">%</span> <span class="n">SERVER_ROOT</span>
+    <span class="n">FREESURFER_ROOT</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/FreeSurfer_preprocessed/&quot;</span> <span class="o">%</span> <span class="n">SERVER_ROOT</span>
+    <span class="n">QOALA_ROOT</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/Qoala/&quot;</span> <span class="o">%</span> <span class="n">SERVER_ROOT</span>
+    <span class="n">MRIQC_ROOT</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/MRIQC/&quot;</span> <span class="o">%</span> <span class="n">SERVER_ROOT</span>
+    <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;./data/processed&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">PARTICIPANTS_FILES</span> <span class="o">=</span> <span class="n">find_all_files_by_name</span><span class="p">(</span><span class="n">PARTICIPANT_ROOT</span><span class="p">,</span> <span class="s2">&quot;participants.tsv&quot;</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">file_path</span> <span class="ow">in</span> <span class="n">PARTICIPANTS_FILES</span><span class="p">:</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">read_csv</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">df</span><span class="p">[</span><span class="s2">&quot;image_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[[</span><span class="s2">&quot;participant_id&quot;</span><span class="p">,</span> <span class="s2">&quot;session_id&quot;</span><span class="p">,</span> <span class="s2">&quot;acq_id&quot;</span><span class="p">,</span> <span class="s2">&quot;run_id&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_T1w&quot;</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">FSURFER_FILES</span> <span class="o">=</span> <span class="n">find_all_files_by_name</span><span class="p">(</span><span class="n">FREESURFER_ROOT</span><span class="p">,</span> <span class="s2">&quot;freesurferData.csv&quot;</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">QOALA_FILES</span> <span class="o">=</span> <span class="n">find_all_files_by_name</span><span class="p">(</span><span class="n">QOALA_ROOT</span><span class="p">,</span> <span class="s2">&quot;Qoala*.csv&quot;</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">MRIQC_GROUP_FILES</span> <span class="o">=</span> <span class="n">find_all_files_by_name</span><span class="p">(</span><span class="n">MRIQC_ROOT</span><span class="p">,</span> <span class="s2">&quot;group_T1w.tsv&quot;</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">MRIQC_PRED_FILES</span> <span class="o">=</span> <span class="n">find_all_files_by_name</span><span class="p">(</span><span class="n">MRIQC_ROOT</span><span class="p">,</span> <span class="s2">&quot;*pred.csv&quot;</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">collect_multiple_datafile</span><span class="p">(</span><span class="n">PARTICIPANTS_FILES</span><span class="p">,</span> <span class="n">PARTICIPANT_ROOT</span><span class="p">,</span> <span class="s2">&quot;./data/raw/&quot;</span><span class="p">)</span>
+    <span class="n">collect_multiple_datafile</span><span class="p">(</span><span class="n">FSURFER_FILES</span><span class="p">,</span> <span class="n">FREESURFER_ROOT</span><span class="p">,</span> <span class="s2">&quot;./data/raw/&quot;</span><span class="p">)</span>
+    <span class="n">collect_multiple_datafile</span><span class="p">(</span><span class="n">QOALA_FILES</span><span class="p">,</span> <span class="n">QOALA_ROOT</span><span class="p">,</span> <span class="s2">&quot;./data/raw/&quot;</span><span class="p">)</span>
+    <span class="n">collect_multiple_datafile</span><span class="p">(</span><span class="n">MRIQC_GROUP_FILES</span><span class="p">,</span> <span class="n">MRIQC_ROOT</span><span class="p">,</span> <span class="s2">&quot;./data/raw/&quot;</span><span class="p">)</span>
+    <span class="n">collect_multiple_datafile</span><span class="p">(</span><span class="n">MRIQC_PRED_FILES</span><span class="p">,</span> <span class="n">MRIQC_ROOT</span><span class="p">,</span> <span class="s2">&quot;./data/raw/&quot;</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Rafael Garcia-Dias, Creative Commons.
+      <span class="lastupdated">
+        Last updated on Aug 05, 2020.
+      </span>
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
