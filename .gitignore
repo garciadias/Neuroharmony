@@ -62,7 +62,6 @@ data/combined/all_subjects\.csv
 
 *.joblib
 
-*.png
 
 *.pkl
 
