@@ -28,21 +28,6 @@ Neuroharmony's documentation
     scanners) to harmonize single images from unseen/unknown scanners based on.
   </p>
 
-.. toctree::
-   :maxdepth: 2
-   :hidden:
-   :caption: Neuroharmony
-
-   neuroharmony
-
-
-.. toctree::
-   :maxdepth: 2
-   :hidden:
-   :caption: Documentation
-
-   api
-
 
 Install
 -------
@@ -168,3 +153,57 @@ Train your own model
     )
     # Fit the model.
     x_train_harmonized = harmony.fit_transform(x_train)
+
+################
+Neuroharmony API
+################
+
+.. currentmodule:: neuroharmony
+
+
+Harmonization models
+====================
+
+.. autosummary::
+   :toctree: generated/
+   :template: class.rst
+
+   Neuroharmony
+
+
+.. autosummary::
+  :toctree: generated/
+  :template: class.rst
+
+   ComBat
+
+Data Preparation
+================
+
+.. autosummary::
+  :toctree: generated/
+  :template: function.rst
+
+  combine_freesurfer
+  combine_mriqc
+  exclude_single_subject_groups
+
+Download samples
+================
+
+.. autosummary::
+  :toctree: generated/
+  :template: function.rst
+
+  fetch_mri_data
+  fetch_sample
+  fetch_trained_model
+
+Kolmogorov-Smirnov Test
+=======================
+
+.. autosummary::
+  :toctree: generated/
+  :template: function.rst
+
+  ks_test_grid

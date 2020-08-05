@@ -12,5 +12,4 @@
 {{see_also}}
 {{notes}}
 {{references}}
-{{examples}}
 {{methods}}
