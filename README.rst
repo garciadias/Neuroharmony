@@ -4,6 +4,12 @@ Neuroharmony: A tool for harmonizing volumetric MRI data from unseen scanners
 The model presented in `Garcia-Dias, et
 al. (2020) <https://www.sciencedirect.com/science/article/pii/S1053811920306133>`__.
 
+Documentation
+-------------
+
+`neuroharmony.readthedocs.io <https://neuroharmony.readthedocs.io>`__
+
+
 Install Neuroharmony.
 ---------------------
 
