@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 """Setup python package."""
 
-from setuptools import setup
-from os import system
+from setuptools import setup, find_packages
+
 
 with open("README.rst") as readme_file:
     readme = readme_file.read()
@@ -45,13 +45,14 @@ setup(
     license="MIT license",
     long_description=readme,
     name="Neuroharmony",
-    package_dir={"neuroharmony": "neuroharmony"},
-    packages=["neuroharmony"],
+    package_dir={"neuroharmony": "neuroharmony",
+                 "models": "neuroharmony.models",
+                 "neuroCombat": "neuroharmony.models.neuroCombat",
+                 },
+    packages=find_packages(),
     python_requires='>=3.6',
     test_suite="pytest",
     url="https://github.com/garciadias/Neuroharmony",
-    version="0.1.1",
+    version="0.1.4",
     zip_safe=False,
 )
-
-system("pip install git+https://github.com/ncullen93/neuroCombat")
