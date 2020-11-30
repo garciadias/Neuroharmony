@@ -68,6 +68,8 @@ Combine FreeSurfer_ and MRIQC_ data on the Neuroharmony format and apply the res
 
 .. code-block:: python
 
+    import pandas as pd
+    
     from neuroharmony import fetch_trained_model, combine_freesurfer, combine_mriqc
 
     mri_path = 'Path for your BIDS folder'

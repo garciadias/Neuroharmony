@@ -211,7 +211,9 @@ derivatives/mriqc/ folder using 8 cores. You can see the mriqc-run help with <ci
 model or by using our pre-trained model.</p>
 <div class="section" id="combine-freesurfer-and-mriqc-data-on-the-neuroharmony-format-and-apply-the-result-on-a-trained-model">
 <h2>Combine <a class="reference external" href="https://surfer.nmr.mgh.harvard.edu/">FreeSurfer</a> and <a class="reference external" href="https://mriqc.readthedocs.io/en/latest/">MRIQC</a> data on the Neuroharmony format and apply the result on a trained model<a class="headerlink" href="#combine-freesurfer-and-mriqc-data-on-the-neuroharmony-format-and-apply-the-result-on-a-trained-model" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">neuroharmony</span> <span class="kn">import</span> <span class="n">fetch_trained_model</span><span class="p">,</span> <span class="n">combine_freesurfer</span><span class="p">,</span> <span class="n">combine_mriqc</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="kn">from</span> <span class="nn">neuroharmony</span> <span class="kn">import</span> <span class="n">fetch_trained_model</span><span class="p">,</span> <span class="n">combine_freesurfer</span><span class="p">,</span> <span class="n">combine_mriqc</span>
 
 <span class="n">mri_path</span> <span class="o">=</span> <span class="s1">&#39;Path for your BIDS folder&#39;</span>
 <span class="n">freesurfer_data</span> <span class="o">=</span> <span class="n">combine_freesurfer</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">mri_path</span><span class="si">}</span><span class="s1">/derivatives/freesurfer/&#39;</span><span class="p">)</span>
@@ -303,7 +305,7 @@ model or by using our pre-trained model.</p>
         
         &copy; Copyright 2020, Rafael Garcia-Dias, Creative Commons.
       <span class="lastupdated">
-        Last updated on Aug 05, 2020.
+        Last updated on Nov 30, 2020.
       </span>
 
     </p>
