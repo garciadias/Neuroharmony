@@ -47,7 +47,7 @@ def combine_freesurfer(freesurfer_path):
     return combined
 
 
-def combine_mriqc(mri_path):
+def combine_mriqc(mri_path=None, group_path=None, mclf_path=None):
     """Combine group_T1w and mclf files from the MRIQC output.
 
     It uses the list in columns_name.list file to select the relevant features in the freesurfer output.
@@ -62,10 +62,17 @@ def combine_mriqc(mri_path):
     combined : NDFrame of shape [n_subjects, n_features]
         A DataFrame with the MRIQC information for each subject.
     """
-    iqm_path = _files_exists(mri_path, "group_T1w.tsv")
-    pred_path = _files_exists(mri_path, "mclf*")
+    if group_path is None:
+        iqm_path = _files_exists(mri_path, "group_T1w.tsv")
+    if mclf_path is None:
+        pred_path = _files_exists(mri_path, "mclf*")
     if not iqm_path or not pred_path:
         raise FileNotFoundError(f"MRIQC files not found in {mri_path}")
+    if isinstance(pred_path, list):
+        pred_path = "\n".join(pred_path)
+        raise TypeError(f"There are multiple mclf*.csv files at {mri_path}.\n\
+                          Rename undesired mclf files you want to ignore or specify mclf_path.\n\
+                          MCLF files found:\n{pred_path}")
     iqm = pd.read_csv(iqm_path, header=0, sep="\t")
     pred = pd.read_csv(pred_path, header=0)
     pred["bids_name"] = "sub-" + pred.subject_id + "_T1w"
@@ -183,9 +190,12 @@ class Site(object):
             return False
         elif len(file_search) == 1:
             return file_search[0]
-        else:
-            return file_search
-            warnings.warn("There are more than one %s file in this site." % file_pattern)
+        elif len(file_search) >= 1:
+            error_str = "\n".join([str(p) for p in file_search])
+            warnings.warn(f"There are multiple mclf*.csv files at {directory_path}.\n"
+                          "Rename undesired mclf files you want to ignore or specify mclf_path.\n"
+                          f"MCLF files found:\n{error_str}\nUsing: {file_search[0]}")
+            return file_search[0]
 
     def _get_files(self):
         """Verify if each of the files exist and is unique."""
