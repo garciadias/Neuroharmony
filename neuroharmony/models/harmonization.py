@@ -11,7 +11,7 @@ from sklearn.decomposition import PCA
 from sklearn.base import BaseEstimator, TransformerMixin
 from pandas.core.generic import NDFrame
 from pandas import Series, DataFrame, concat, merge
-from numpy import unique
+from numpy import unique, number
 
 from neuroharmony.models.neuroCombat import neuroCombat
 
@@ -433,23 +433,30 @@ class Neuroharmony(TransformerMixin, BaseEstimator):
 
     def _check_vars(self, df, vars):
         vars = Series(vars)
+        # verify all needed variables are present
         is_feature_present = vars.isin(df.columns)
         missing_features_str = "Missing features: %s" % ", ".join(vars[~is_feature_present])
+        self.numeric_features = df.select_dtypes(include=number).columns.tolist()
         assert is_feature_present.all(), ValueError(missing_features_str)
 
     def _check_training_ranges(self, df):
+        vars = self.features + self.regression_features
+        self.numeric_features = df[vars].select_dtypes(include=number).columns.tolist()
+        numeric_vars = [var for var in vars if var in self.numeric_features]
         self.coverage_ = concat(
             [
-                df[self.features + self.regression_features].min(skipna=True),
-                df[self.features + self.regression_features].max(skipna=True),
+                df[numeric_vars].min(skipna=True),
+                df[numeric_vars].max(skipna=True),
             ],
             axis=1,
             keys=["min", "max"],
         )
 
     def _check_prediction_ranges(self, df):
+        vars = self.features + self.regression_features
+        numeric_vars = [var for var in vars if var in self.numeric_features]
         self.prediction_is_covered_ = (
-            df[self.features + self.regression_features]
+            df[numeric_vars]
             .apply(
                 lambda column: column.between(self.coverage_["min"][column.name], self.coverage_["max"][column.name],)
             )
@@ -457,7 +464,7 @@ class Neuroharmony(TransformerMixin, BaseEstimator):
         )
         if not self.prediction_is_covered_.all():
             warn(
-                "Some of the subject are out of the training range. "
+                "Some of the subject are out of the training range."
                 "See Neuroharmony.subjects_out_of_range_ for a list of the affected subjects."
             )
             self.subjects_out_of_range_ = self.prediction_is_covered_[~self.prediction_is_covered_].index.tolist()

@@ -49,6 +49,18 @@ def resources(tmpdir_factory):
 
 @pytest.fixture(scope="session")
 def model(resources):
+    """Define mock model.
+
+    Parameters
+    ----------
+    resources : namedtuple
+        Basic information needed to build a neuroharmony model.
+
+    Returns
+    -------
+    Neuroharmony class
+        Neuroharmony model.
+    """
     neuroharmony = Neuroharmony(
         resources.features,
         resources.regression_features,
@@ -102,6 +114,7 @@ def test_neuroharmony_behaviour(resources):
 
 
 def test_ckeck_training_range(model, resources):
+    """Test check model can record the training range of each variables."""
     neuroharmony = model
     neuroharmony._check_training_ranges(resources.X_train_split)
     assert isinstance(neuroharmony.coverage_, NDFrame), "coverage_ is not DataFrame."
@@ -109,6 +122,7 @@ def test_ckeck_training_range(model, resources):
 
 
 def test_ckeck_prediction_range(model, resources):
+    """Test we can verify if the prediction sample is covered by the training ranges."""
     neuroharmony = model
     neuroharmony._check_training_ranges(resources.X_train_split)
     neuroharmony._check_prediction_ranges(resources.X_test_split)
