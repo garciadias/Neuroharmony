@@ -80,7 +80,7 @@ def fetch_trained_model():
         _download("https://www.dropbox.com/s/s3521oqd3fpi0ll/neuroharmony.pkl.gz", filepath)
     try:
         return joblib.load(filepath)
-    except KeyError:
+    except (KeyError, ValueError):
         Path(filepath).unlinke()
         _download("https://www.dropbox.com/s/s3521oqd3fpi0ll/neuroharmony.pkl.gz", filepath)
         return joblib.load(filepath)
