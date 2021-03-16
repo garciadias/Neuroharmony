@@ -203,12 +203,12 @@ class ComBat(BaseEstimator, TransformerMixin):
 
     def _check_index(self, df):
         if df.index.duplicated().sum():
-            df.index = [f'{index}_TMP_{i}' for i, index in enumerate(df.index)]
+            df.index = [f"{index}_TMP_{i}" for i, index in enumerate(df.index)]
             self.reindexed = True
         return df
 
     def _clean_index(self, df):
-        df.index = [index.split('_TMP_')[0] for index in df.index]
+        df.index = [index.split("_TMP_")[0] for index in df.index]
         return df
 
     def _check_vars(self, df, vars):
@@ -444,12 +444,7 @@ class Neuroharmony(TransformerMixin, BaseEstimator):
         self.numeric_features = df[vars].select_dtypes(include=number).columns.tolist()
         numeric_vars = [var for var in vars if var in self.numeric_features]
         self.coverage_ = concat(
-            [
-                df[numeric_vars].min(skipna=True),
-                df[numeric_vars].max(skipna=True),
-            ],
-            axis=1,
-            keys=["min", "max"],
+            [df[numeric_vars].min(skipna=True), df[numeric_vars].max(skipna=True),], axis=1, keys=["min", "max"],
         )
 
     def _check_prediction_ranges(self, df):
@@ -478,20 +473,21 @@ class Neuroharmony(TransformerMixin, BaseEstimator):
 
     def _check_index(self, df):
         if df.index.duplicated().sum():
-            df.index = [f'{index}_TMP_{i}' for i, index in enumerate(df.index)]
+            df.index = [f"{index}_TMP_{i}" for i, index in enumerate(df.index)]
             self.reindexed = True
         return df
 
     def _clean_index(self, df):
-        df.index = [index.split('_TMP_')[0] for index in df.index]
+        df.index = [index.split("_TMP_")[0] for index in df.index]
         return df
 
     def _get_pca_n_componets(self, X):
         X = self.scaler.fit_transform(X)
         self.decomposition.set_params(n_components=X.shape[1])
         self.decomposition.fit(X)
-        n = next(i for i, x in enumerate(self.decomposition.explained_variance_ratio_) if x < 0.01)
-        return [n + 1]
+        cumulative_evr = [self.decomposition.explained_variance_ratio_[: i + 1].sum() for i in range(X.shape[1])]
+        n = next(i for i, x in enumerate(cumulative_evr) if x > 0.90)
+        return [n]
 
     def _clean_bad_pca_parameters(self, X):
         n_vars = len(self.regression_features) + 1
@@ -548,9 +544,7 @@ class Neuroharmony(TransformerMixin, BaseEstimator):
         combat = ComBat(self.features, self.covariates, self.eliminate_variance)
         self.X_harmonized_ = combat.transform(df.copy())
         self.X_harmonized_ = _label_decode_covariates(
-            self.X_harmonized_,
-            unique(self.covariates + self.eliminate_variance),
-            self.encoders,
+            self.X_harmonized_, unique(self.covariates + self.eliminate_variance), self.encoders,
         )
         self.X_harmonized_.drop_duplicates(inplace=True)
         delta = df[self.features].subtract(self.X_harmonized_[self.features])
