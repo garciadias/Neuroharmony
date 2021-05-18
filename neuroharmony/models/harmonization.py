@@ -1,14 +1,16 @@
+"""Neuroharmony classes and functions."""
 from os import devnull
 from warnings import warn
 import sys
 
 from tqdm import tqdm
+from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.decomposition import PCA
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.exceptions import NotFittedError
+from sklearn.model_selection import LeaveOneGroupOut, RandomizedSearchCV
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import LabelEncoder, StandardScaler
-from sklearn.model_selection import LeaveOneGroupOut, RandomizedSearchCV
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.decomposition import PCA
-from sklearn.base import BaseEstimator, TransformerMixin
 from pandas.core.generic import NDFrame
 from pandas import Series, DataFrame, concat, merge
 from numpy import unique, number
@@ -95,6 +97,7 @@ class ComBat(BaseEstimator, TransformerMixin):
     """
 
     def __init__(self, features, covariates, eliminate_variance):
+        """Init class."""
         self.covariates = covariates
         self.eliminate_variance = eliminate_variance
         self.features = features
@@ -203,12 +206,12 @@ class ComBat(BaseEstimator, TransformerMixin):
 
     def _check_index(self, df):
         if df.index.duplicated().sum():
-            df.index = [f'{index}_TMP_{i}' for i, index in enumerate(df.index)]
+            df.index = [f"{index}_TMP_{i}" for i, index in enumerate(df.index)]
             self.reindexed = True
         return df
 
     def _clean_index(self, df):
-        df.index = [index.split('_TMP_')[0] for index in df.index]
+        df.index = [index.split("_TMP_")[0] for index in df.index]
         return df
 
     def _check_vars(self, df, vars):
@@ -260,7 +263,7 @@ class ComBat(BaseEstimator, TransformerMixin):
 
 
 class Neuroharmony(TransformerMixin, BaseEstimator):
-    """ Harmonization tool to mitigate scanner bias.
+    """Harmonization tool to mitigate scanner bias.
 
     Parameters
     ----------
@@ -317,6 +320,7 @@ class Neuroharmony(TransformerMixin, BaseEstimator):
         randomized_search_args=dict(),
         pipeline_args=dict(),
     ):
+        """Init class."""
         self.covariates = covariates
         self.decomposition = decomposition
         self.eliminate_variance = eliminate_variance
@@ -396,6 +400,7 @@ class Neuroharmony(TransformerMixin, BaseEstimator):
             Data harmonized with Neuroharmony.
         """
         # Check data
+        self._check_trained_model()
         self._check_data(df.copy())
         self._check_prediction_ranges(df.copy())
         df = self._check_index(df.copy())
@@ -431,6 +436,39 @@ class Neuroharmony(TransformerMixin, BaseEstimator):
         """
         return self.predict(df.copy())
 
+    def refit(self, df):
+        """Fit a trained model with a new dataset.
+
+        Parameters
+        ----------
+        df : NDFrame of shape [n_samples, n_features]
+            Pandas dataframe with features, regression_features and covariates.
+        """
+        # Check data
+        self._check_trained_model()
+        self._check_data(df.copy())
+        df = self._check_index(df.copy())
+        self._check_training_ranges(df.copy())
+        df, self.encoders = _label_encode_covariates(df.copy(), unique(self.covariates + self.eliminate_variance))
+        self.models_by_feature_[self.features[0]]._check_is_fitted("predict")
+
+        X_train_split, y_train_split = self._run_combat(df.copy())
+        desc = "Retraining Neuroharmony hyperparameters: "
+        for var in tqdm(self.features, desc=desc):
+            self.models_by_feature_[var].fit(
+                X_train_split[self.regression_features + [var]], y_train_split[var],
+            )
+        return self
+
+    def _check_trained_model(self):
+        if hasattr(self, "models_by_feature_"):
+            return self
+        else:
+            raise NotFittedError(
+                "This Neuroharmony instance is not fitted yet. Call 'fit' with appropriate arguments"
+                " before using this estimator."
+            )
+
     def _check_vars(self, df, vars):
         vars = Series(vars)
         # verify all needed variables are present
@@ -444,12 +482,7 @@ class Neuroharmony(TransformerMixin, BaseEstimator):
         self.numeric_features = df[vars].select_dtypes(include=number).columns.tolist()
         numeric_vars = [var for var in vars if var in self.numeric_features]
         self.coverage_ = concat(
-            [
-                df[numeric_vars].min(skipna=True),
-                df[numeric_vars].max(skipna=True),
-            ],
-            axis=1,
-            keys=["min", "max"],
+            [df[numeric_vars].min(skipna=True), df[numeric_vars].max(skipna=True)], axis=1, keys=["min", "max"],
         )
 
     def _check_prediction_ranges(self, df):
@@ -478,12 +511,12 @@ class Neuroharmony(TransformerMixin, BaseEstimator):
 
     def _check_index(self, df):
         if df.index.duplicated().sum():
-            df.index = [f'{index}_TMP_{i}' for i, index in enumerate(df.index)]
+            df.index = [f"{index}_TMP_{i}" for i, index in enumerate(df.index)]
             self.reindexed = True
         return df
 
     def _clean_index(self, df):
-        df.index = [index.split('_TMP_')[0] for index in df.index]
+        df.index = [index.split("_TMP_")[0] for index in df.index]
         return df
 
     def _get_pca_n_componets(self, X):
@@ -548,9 +581,7 @@ class Neuroharmony(TransformerMixin, BaseEstimator):
         combat = ComBat(self.features, self.covariates, self.eliminate_variance)
         self.X_harmonized_ = combat.transform(df.copy())
         self.X_harmonized_ = _label_decode_covariates(
-            self.X_harmonized_,
-            unique(self.covariates + self.eliminate_variance),
-            self.encoders,
+            self.X_harmonized_, unique(self.covariates + self.eliminate_variance), self.encoders,
         )
         self.X_harmonized_.drop_duplicates(inplace=True)
         delta = df[self.features].subtract(self.X_harmonized_[self.features])
