@@ -7,6 +7,7 @@
 
    
    .. automethod:: fit
+   .. automethod:: refit
    .. automethod:: fit_transform
    .. automethod:: transform
    

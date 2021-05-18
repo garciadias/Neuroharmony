@@ -245,6 +245,20 @@ data, then fit the transformed data using the final estimator.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt id="neuroharmony.Neuroharmony.refit">
+<code class="sig-name descname">refit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">df</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/neuroharmony/models/harmonization.html#Neuroharmony.refit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuroharmony.Neuroharmony.refit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit a trained model with a new dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>df</strong><span class="classifier">NDFrame of shape [n_samples, n_features]</span></dt><dd><p>Pandas dataframe with features, regression_features and covariates.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt id="neuroharmony.Neuroharmony.fit_transform">
 <code class="sig-name descname">fit_transform</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">df</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/neuroharmony/models/harmonization.html#Neuroharmony.fit_transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuroharmony.Neuroharmony.fit_transform" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fit to data, then transform it.</p>
@@ -315,7 +329,7 @@ mean predicted regression targets of the trees in the forest.</p>
         
         &copy; Copyright 2020, Rafael Garcia-Dias, Creative Commons.
       <span class="lastupdated">
-        Last updated on Nov 30, 2020.
+        Last updated on May 18, 2021.
       </span>
 
     </p>
