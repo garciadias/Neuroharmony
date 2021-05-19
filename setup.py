@@ -12,16 +12,8 @@ with open("requirements.txt") as requirements:
     requirements = requirements.readlines()
 
 EXTRAS_REQUIRE = {
-    'tests': [
-        'pytest',
-        'pytest-cov'],
-    'docs': [
-        'sphinx',
-        'sphinx-gallery',
-        'sphinx_rtd_theme',
-        'numpydoc',
-        'matplotlib'
-    ]
+    "tests": ["pytest", "pytest-cov"],
+    "docs": ["sphinx", "sphinx-gallery", "sphinx_rtd_theme", "numpydoc", "matplotlib"],
 }
 
 setup(
@@ -45,14 +37,15 @@ setup(
     license="MIT license",
     long_description=readme,
     name="Neuroharmony",
-    package_dir={"neuroharmony": "neuroharmony",
-                 "models": "neuroharmony.models",
-                 "neuroCombat": "neuroharmony.models.neuroCombat",
-                 },
+    package_dir={
+        "neuroharmony": "neuroharmony",
+        "models": "neuroharmony.models",
+        "neuroCombat": "neuroharmony.models.neuroCombat",
+    },
     packages=find_packages(),
-    python_requires='>=3.6',
+    python_requires=">=3.6",
     test_suite="pytest",
     url="https://github.com/garciadias/Neuroharmony",
-    version="0.1.8",
+    version="0.1.10",
     zip_safe=False,
 )

@@ -455,6 +455,7 @@ class Neuroharmony(TransformerMixin, BaseEstimator):
         X_train_split, y_train_split = self._run_combat(df.copy())
         desc = "Retraining Neuroharmony hyperparameters: "
         for var in tqdm(self.features, desc=desc):
+            self.models_by_feature_[var].best_estimator_[2].warm_start = False
             self.models_by_feature_[var].best_estimator_.fit(
                 X_train_split[self.regression_features + [var]], y_train_split[var],
             )
