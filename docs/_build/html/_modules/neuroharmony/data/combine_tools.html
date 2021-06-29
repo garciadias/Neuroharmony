@@ -209,7 +209,7 @@
     <span class="k">return</span> <span class="n">combined</span></div>
 
 
-<div class="viewcode-block" id="combine_mriqc"><a class="viewcode-back" href="../../../generated/neuroharmony.combine_mriqc.html#neuroharmony.combine_mriqc">[docs]</a><span class="k">def</span> <span class="nf">combine_mriqc</span><span class="p">(</span><span class="n">mri_path</span><span class="p">):</span>
+<div class="viewcode-block" id="combine_mriqc"><a class="viewcode-back" href="../../../generated/neuroharmony.combine_mriqc.html#neuroharmony.combine_mriqc">[docs]</a><span class="k">def</span> <span class="nf">combine_mriqc</span><span class="p">(</span><span class="n">mri_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">group_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mclf_path</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Combine group_T1w and mclf files from the MRIQC output.</span>
 
 <span class="sd">    It uses the list in columns_name.list file to select the relevant features in the freesurfer output.</span>
@@ -224,10 +224,17 @@
 <span class="sd">    combined : NDFrame of shape [n_subjects, n_features]</span>
 <span class="sd">        A DataFrame with the MRIQC information for each subject.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">iqm_path</span> <span class="o">=</span> <span class="n">_files_exists</span><span class="p">(</span><span class="n">mri_path</span><span class="p">,</span> <span class="s2">&quot;group_T1w.tsv&quot;</span><span class="p">)</span>
-    <span class="n">pred_path</span> <span class="o">=</span> <span class="n">_files_exists</span><span class="p">(</span><span class="n">mri_path</span><span class="p">,</span> <span class="s2">&quot;mclf*&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">group_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">iqm_path</span> <span class="o">=</span> <span class="n">_files_exists</span><span class="p">(</span><span class="n">mri_path</span><span class="p">,</span> <span class="s2">&quot;group_T1w.tsv&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">mclf_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">pred_path</span> <span class="o">=</span> <span class="n">_files_exists</span><span class="p">(</span><span class="n">mri_path</span><span class="p">,</span> <span class="s2">&quot;mclf*&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">iqm_path</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">pred_path</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;MRIQC files not found in </span><span class="si">{</span><span class="n">mri_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pred_path</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">pred_path</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pred_path</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;There are multiple mclf*.csv files at </span><span class="si">{</span><span class="n">mri_path</span><span class="si">}</span><span class="s2">.</span><span class="se">\n\</span>
+<span class="s2">                          Rename undesired mclf files you want to ignore or specify mclf_path.</span><span class="se">\n\</span>
+<span class="s2">                          MCLF files found:</span><span class="se">\n</span><span class="si">{</span><span class="n">pred_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="n">iqm</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">iqm_path</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="n">pred</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">pred_path</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
     <span class="n">pred</span><span class="p">[</span><span class="s2">&quot;bids_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;sub-&quot;</span> <span class="o">+</span> <span class="n">pred</span><span class="o">.</span><span class="n">subject_id</span> <span class="o">+</span> <span class="s2">&quot;_T1w&quot;</span>
@@ -345,9 +352,12 @@
             <span class="k">return</span> <span class="kc">False</span>
         <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">file_search</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">file_search</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">file_search</span>
-            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;There are more than one </span><span class="si">%s</span><span class="s2"> file in this site.&quot;</span> <span class="o">%</span> <span class="n">file_pattern</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">file_search</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">error_str</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">file_search</span><span class="p">])</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;There are multiple mclf*.csv files at </span><span class="si">{</span><span class="n">directory_path</span><span class="si">}</span><span class="s2">.</span><span class="se">\n</span><span class="s2">&quot;</span>
+                          <span class="s2">&quot;Rename undesired mclf files you want to ignore or specify mclf_path.</span><span class="se">\n</span><span class="s2">&quot;</span>
+                          <span class="sa">f</span><span class="s2">&quot;MCLF files found:</span><span class="se">\n</span><span class="si">{</span><span class="n">error_str</span><span class="si">}</span><span class="se">\n</span><span class="s2">Using: </span><span class="si">{</span><span class="n">file_search</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">file_search</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
     <span class="k">def</span> <span class="nf">_get_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Verify if each of the files exist and is unique.&quot;&quot;&quot;</span>
@@ -559,7 +569,7 @@
         
         &copy; Copyright 2020, Rafael Garcia-Dias, Creative Commons.
       <span class="lastupdated">
-        Last updated on Nov 30, 2020.
+        Last updated on May 18, 2021.
       </span>
 
     </p>

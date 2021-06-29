@@ -160,20 +160,22 @@
            <div itemprop="articleBody">
             
   <h1>Source code for neuroharmony.models.harmonization</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">os</span> <span class="kn">import</span> <span class="n">devnull</span>
+<span></span><span class="sd">&quot;&quot;&quot;Neuroharmony classes and functions.&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">os</span> <span class="kn">import</span> <span class="n">devnull</span>
 <span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
 <span class="kn">import</span> <span class="nn">sys</span>
 
 <span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
+<span class="kn">from</span> <span class="nn">sklearn.base</span> <span class="kn">import</span> <span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">TransformerMixin</span>
+<span class="kn">from</span> <span class="nn">sklearn.decomposition</span> <span class="kn">import</span> <span class="n">PCA</span>
+<span class="kn">from</span> <span class="nn">sklearn.ensemble</span> <span class="kn">import</span> <span class="n">RandomForestRegressor</span>
+<span class="kn">from</span> <span class="nn">sklearn.exceptions</span> <span class="kn">import</span> <span class="n">NotFittedError</span>
+<span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">LeaveOneGroupOut</span><span class="p">,</span> <span class="n">RandomizedSearchCV</span>
 <span class="kn">from</span> <span class="nn">sklearn.pipeline</span> <span class="kn">import</span> <span class="n">Pipeline</span>
 <span class="kn">from</span> <span class="nn">sklearn.preprocessing</span> <span class="kn">import</span> <span class="n">LabelEncoder</span><span class="p">,</span> <span class="n">StandardScaler</span>
-<span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">LeaveOneGroupOut</span><span class="p">,</span> <span class="n">RandomizedSearchCV</span>
-<span class="kn">from</span> <span class="nn">sklearn.ensemble</span> <span class="kn">import</span> <span class="n">RandomForestRegressor</span>
-<span class="kn">from</span> <span class="nn">sklearn.decomposition</span> <span class="kn">import</span> <span class="n">PCA</span>
-<span class="kn">from</span> <span class="nn">sklearn.base</span> <span class="kn">import</span> <span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">TransformerMixin</span>
 <span class="kn">from</span> <span class="nn">pandas.core.generic</span> <span class="kn">import</span> <span class="n">NDFrame</span>
 <span class="kn">from</span> <span class="nn">pandas</span> <span class="kn">import</span> <span class="n">Series</span><span class="p">,</span> <span class="n">DataFrame</span><span class="p">,</span> <span class="n">concat</span><span class="p">,</span> <span class="n">merge</span>
-<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">unique</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">unique</span><span class="p">,</span> <span class="n">number</span>
 
 <span class="kn">from</span> <span class="nn">neuroharmony.models.neuroCombat</span> <span class="kn">import</span> <span class="n">neuroCombat</span>
 
@@ -257,6 +259,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">features</span><span class="p">,</span> <span class="n">covariates</span><span class="p">,</span> <span class="n">eliminate_variance</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Init class.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">covariates</span> <span class="o">=</span> <span class="n">covariates</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">eliminate_variance</span> <span class="o">=</span> <span class="n">eliminate_variance</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">features</span> <span class="o">=</span> <span class="n">features</span>
@@ -365,12 +368,12 @@
 
     <span class="k">def</span> <span class="nf">_check_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">duplicated</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">():</span>
-            <span class="n">df</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s1">_TMP_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">)]</span>
+            <span class="n">df</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2">_TMP_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">)]</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">reindexed</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">return</span> <span class="n">df</span>
 
     <span class="k">def</span> <span class="nf">_clean_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">):</span>
-        <span class="n">df</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="p">[</span><span class="n">index</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;_TMP_&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">]</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="p">[</span><span class="n">index</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_TMP_&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">df</span>
 
     <span class="k">def</span> <span class="nf">_check_vars</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="nb">vars</span><span class="p">):</span>
@@ -422,7 +425,7 @@
 
 
 <div class="viewcode-block" id="Neuroharmony"><a class="viewcode-back" href="../../../generated/neuroharmony.Neuroharmony.html#neuroharmony.Neuroharmony">[docs]</a><span class="k">class</span> <span class="nc">Neuroharmony</span><span class="p">(</span><span class="n">TransformerMixin</span><span class="p">,</span> <span class="n">BaseEstimator</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; Harmonization tool to mitigate scanner bias.</span>
+    <span class="sd">&quot;&quot;&quot;Harmonization tool to mitigate scanner bias.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -479,6 +482,7 @@
         <span class="n">randomized_search_args</span><span class="o">=</span><span class="nb">dict</span><span class="p">(),</span>
         <span class="n">pipeline_args</span><span class="o">=</span><span class="nb">dict</span><span class="p">(),</span>
     <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Init class.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">covariates</span> <span class="o">=</span> <span class="n">covariates</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">decomposition</span> <span class="o">=</span> <span class="n">decomposition</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">eliminate_variance</span> <span class="o">=</span> <span class="n">eliminate_variance</span>
@@ -558,6 +562,7 @@
 <span class="sd">            Data harmonized with Neuroharmony.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Check data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_trained_model</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_data</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_prediction_ranges</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
         <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_index</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
@@ -593,25 +598,60 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span></div>
 
+<div class="viewcode-block" id="Neuroharmony.refit"><a class="viewcode-back" href="../../../generated/neuroharmony.Neuroharmony.html#neuroharmony.Neuroharmony.refit">[docs]</a>    <span class="k">def</span> <span class="nf">refit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Fit a trained model with a new dataset.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        df : NDFrame of shape [n_samples, n_features]</span>
+<span class="sd">            Pandas dataframe with features, regression_features and covariates.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Check data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_trained_model</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_data</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_index</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_training_ranges</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+        <span class="n">df</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoders</span> <span class="o">=</span> <span class="n">_label_encode_covariates</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">unique</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">covariates</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">eliminate_variance</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">models_by_feature_</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">features</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">_check_is_fitted</span><span class="p">(</span><span class="s2">&quot;predict&quot;</span><span class="p">)</span>
+
+        <span class="n">X_train_split</span><span class="p">,</span> <span class="n">y_train_split</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_combat</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+        <span class="n">desc</span> <span class="o">=</span> <span class="s2">&quot;Retraining Neuroharmony hyperparameters: &quot;</span>
+        <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">features</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="n">desc</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">models_by_feature_</span><span class="p">[</span><span class="n">var</span><span class="p">]</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+                <span class="n">X_train_split</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">regression_features</span> <span class="o">+</span> <span class="p">[</span><span class="n">var</span><span class="p">]],</span> <span class="n">y_train_split</span><span class="p">[</span><span class="n">var</span><span class="p">],</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+    <span class="k">def</span> <span class="nf">_check_trained_model</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;models_by_feature_&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">NotFittedError</span><span class="p">(</span>
+                <span class="s2">&quot;This Neuroharmony instance is not fitted yet. Call &#39;fit&#39; with appropriate arguments&quot;</span>
+                <span class="s2">&quot; before using this estimator.&quot;</span>
+            <span class="p">)</span>
+
     <span class="k">def</span> <span class="nf">_check_vars</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="nb">vars</span><span class="p">):</span>
         <span class="nb">vars</span> <span class="o">=</span> <span class="n">Series</span><span class="p">(</span><span class="nb">vars</span><span class="p">)</span>
+        <span class="c1"># verify all needed variables are present</span>
         <span class="n">is_feature_present</span> <span class="o">=</span> <span class="nb">vars</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
         <span class="n">missing_features_str</span> <span class="o">=</span> <span class="s2">&quot;Missing features: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">vars</span><span class="p">[</span><span class="o">~</span><span class="n">is_feature_present</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">numeric_features</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="n">include</span><span class="o">=</span><span class="n">number</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
         <span class="k">assert</span> <span class="n">is_feature_present</span><span class="o">.</span><span class="n">all</span><span class="p">(),</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">missing_features_str</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_check_training_ranges</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">):</span>
+        <span class="nb">vars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">features</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">regression_features</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">numeric_features</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="nb">vars</span><span class="p">]</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="n">include</span><span class="o">=</span><span class="n">number</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+        <span class="n">numeric_vars</span> <span class="o">=</span> <span class="p">[</span><span class="n">var</span> <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="nb">vars</span> <span class="k">if</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">numeric_features</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">coverage_</span> <span class="o">=</span> <span class="n">concat</span><span class="p">(</span>
-            <span class="p">[</span>
-                <span class="n">df</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">features</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">regression_features</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">skipna</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-                <span class="n">df</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">features</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">regression_features</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">skipna</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-            <span class="p">],</span>
-            <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-            <span class="n">keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;min&quot;</span><span class="p">,</span> <span class="s2">&quot;max&quot;</span><span class="p">],</span>
+            <span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="n">numeric_vars</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">skipna</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">df</span><span class="p">[</span><span class="n">numeric_vars</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">skipna</span><span class="o">=</span><span class="kc">True</span><span class="p">)],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;min&quot;</span><span class="p">,</span> <span class="s2">&quot;max&quot;</span><span class="p">],</span>
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_check_prediction_ranges</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">):</span>
+        <span class="nb">vars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">features</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">regression_features</span>
+        <span class="n">numeric_vars</span> <span class="o">=</span> <span class="p">[</span><span class="n">var</span> <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="nb">vars</span> <span class="k">if</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">numeric_features</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">prediction_is_covered_</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">df</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">features</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">regression_features</span><span class="p">]</span>
+            <span class="n">df</span><span class="p">[</span><span class="n">numeric_vars</span><span class="p">]</span>
             <span class="o">.</span><span class="n">apply</span><span class="p">(</span>
                 <span class="k">lambda</span> <span class="n">column</span><span class="p">:</span> <span class="n">column</span><span class="o">.</span><span class="n">between</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coverage_</span><span class="p">[</span><span class="s2">&quot;min&quot;</span><span class="p">][</span><span class="n">column</span><span class="o">.</span><span class="n">name</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">coverage_</span><span class="p">[</span><span class="s2">&quot;max&quot;</span><span class="p">][</span><span class="n">column</span><span class="o">.</span><span class="n">name</span><span class="p">],)</span>
             <span class="p">)</span>
@@ -619,7 +659,7 @@
         <span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">prediction_is_covered_</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
             <span class="n">warn</span><span class="p">(</span>
-                <span class="s2">&quot;Some of the subject are out of the training range. &quot;</span>
+                <span class="s2">&quot;Some of the subject are out of the training range.&quot;</span>
                 <span class="s2">&quot;See Neuroharmony.subjects_out_of_range_ for a list of the affected subjects.&quot;</span>
             <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">subjects_out_of_range_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prediction_is_covered_</span><span class="p">[</span><span class="o">~</span><span class="bp">self</span><span class="o">.</span><span class="n">prediction_is_covered_</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
@@ -633,12 +673,12 @@
 
     <span class="k">def</span> <span class="nf">_check_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">duplicated</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">():</span>
-            <span class="n">df</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s1">_TMP_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">)]</span>
+            <span class="n">df</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2">_TMP_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">)]</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">reindexed</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">return</span> <span class="n">df</span>
 
     <span class="k">def</span> <span class="nf">_clean_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">):</span>
-        <span class="n">df</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="p">[</span><span class="n">index</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;_TMP_&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">]</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="p">[</span><span class="n">index</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_TMP_&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">df</span>
 
     <span class="k">def</span> <span class="nf">_get_pca_n_componets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
@@ -703,9 +743,7 @@
         <span class="n">combat</span> <span class="o">=</span> <span class="n">ComBat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">features</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">covariates</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">eliminate_variance</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">X_harmonized_</span> <span class="o">=</span> <span class="n">combat</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">X_harmonized_</span> <span class="o">=</span> <span class="n">_label_decode_covariates</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">X_harmonized_</span><span class="p">,</span>
-            <span class="n">unique</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">covariates</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">eliminate_variance</span><span class="p">),</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">encoders</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">X_harmonized_</span><span class="p">,</span> <span class="n">unique</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">covariates</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">eliminate_variance</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoders</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">X_harmonized_</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">delta</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">features</span><span class="p">]</span><span class="o">.</span><span class="n">subtract</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">X_harmonized_</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">features</span><span class="p">])</span>
@@ -730,7 +768,7 @@
         
         &copy; Copyright 2020, Rafael Garcia-Dias, Creative Commons.
       <span class="lastupdated">
-        Last updated on Nov 30, 2020.
+        Last updated on May 18, 2021.
       </span>
 
     </p>

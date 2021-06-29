@@ -34,3 +34,8 @@ scanners) to harmonize single images from unseen/unknown scanners based on.
    :width: 700
    :target: https://doi.org/10.1016/j.neuroimage.2020.117127
    :alt: Front pafe of the article "Neuroharmony: A new tool for harmonizing volumetric MRI data from unseen scanners".
+
+Run Tests
+---------
+
+python -m pytest tests/
