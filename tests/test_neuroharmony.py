@@ -12,7 +12,11 @@ from neuroharmony import fetch_trained_model
 from neuroharmony.data.collect_tools import fetch_sample
 from neuroharmony.data.rois import rois
 from neuroharmony.models.harmonization import exclude_single_subject_groups
-from neuroharmony.models.harmonization import Neuroharmony, _label_encode_covariates, _label_decode_covariates
+from neuroharmony.models.harmonization import (
+    Neuroharmony,
+    _label_encode_covariates,
+    _label_decode_covariates,
+)
 from neuroharmony.models.metrics import ks_test_grid
 
 
@@ -145,9 +149,11 @@ def test_ckeck_prediction_range(model, resources):
     assert isinstance(neuroharmony.subjects_out_of_range_, list), "The subjects_out_of_range_ is not a list."
 
 
-def test_fetch_model(test_neuroharmony_behaviour):
+def test_fetch_model():
     """Test a trained model can be retrained."""
     neuroharmony = fetch_trained_model()
+    X = fetch_sample()
+    x_harmonized = neuroharmony.transform(X)
     assert isinstance(neuroharmony.coverage_, NDFrame)
 
 
@@ -156,4 +162,25 @@ def test_retrain_a_model(test_neuroharmony_behaviour, resources):
     neuroharmony = joblib.load("data/neuroharmony.pkl.gz")
     x_train, _ = resources.X_train_split, resources.X_test_split
     neuroharmony.refit(x_train)
-    pass
+
+
+def test_model_strategy(resources):
+    """Test the model_strategy is implemented."""
+    x_train, x_test = resources.X_train_split, resources.X_test_split
+    neuroharmony = Neuroharmony(
+        resources.features,
+        resources.regression_features,
+        resources.covariates,
+        resources.eliminate_variance,
+        param_distributions=dict(
+            RandomForestRegressor__n_estimators=[5, 10, 15, 20],
+            RandomForestRegressor__random_state=[42, 78],
+            RandomForestRegressor__warm_start=[False, True],
+        ),
+        estimator_args=dict(n_jobs=1, random_state=42),
+        randomized_search_args=dict(cv=5, n_jobs=27),
+    )
+    x_train_harmonized = neuroharmony.fit_transform(x_train)
+    x_test_harmonized = neuroharmony.predict(x_test)
+    assert isinstance(x_train_harmonized, NDFrame)
+    assert isinstance(x_test_harmonized, NDFrame)
