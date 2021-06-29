@@ -8,20 +8,19 @@ from setuptools import setup, find_packages
 with open("README.rst") as readme_file:
     readme = readme_file.read()
 
-with open("requirements.txt") as requirements:
-    requirements = requirements.readlines()
+requirements = [
+    "numpy>=1.16.1",
+    "pandas>=1.1.4",
+    "scikit_learn>=0.22.2.post1",
+    "scipy>=1.2.0",
+    "tqdm>=4.31.1",
+    "joblib>=0.14.1",
+    "requests>=2.25.1",
+]
 
 EXTRAS_REQUIRE = {
-    'tests': [
-        'pytest',
-        'pytest-cov'],
-    'docs': [
-        'sphinx',
-        'sphinx-gallery',
-        'sphinx_rtd_theme',
-        'numpydoc',
-        'matplotlib'
-    ]
+    "tests": ["pytest", "pytest-cov"],
+    "docs": ["sphinx", "sphinx-gallery", "sphinx_rtd_theme", "numpydoc", "matplotlib"],
 }
 
 setup(
@@ -45,14 +44,15 @@ setup(
     license="MIT license",
     long_description=readme,
     name="Neuroharmony",
-    package_dir={"neuroharmony": "neuroharmony",
-                 "models": "neuroharmony.models",
-                 "neuroCombat": "neuroharmony.models.neuroCombat",
-                 },
+    package_dir={
+        "neuroharmony": "neuroharmony",
+        "models": "neuroharmony.models",
+        "neuroCombat": "neuroharmony.models.neuroCombat",
+    },
     packages=find_packages(),
-    python_requires='>=3.6',
+    python_requires=">=3.6",
     test_suite="pytest",
     url="https://github.com/garciadias/Neuroharmony",
-    version="0.1.7",
+    version="0.1.12",
     zip_safe=False,
 )

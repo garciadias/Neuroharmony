@@ -242,7 +242,7 @@
         <span class="n">_download</span><span class="p">(</span><span class="s2">&quot;https://www.dropbox.com/s/s3521oqd3fpi0ll/neuroharmony.pkl.gz&quot;</span><span class="p">,</span> <span class="n">filepath</span><span class="p">)</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">joblib</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
-    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
         <span class="n">Path</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span><span class="o">.</span><span class="n">unlinke</span><span class="p">()</span>
         <span class="n">_download</span><span class="p">(</span><span class="s2">&quot;https://www.dropbox.com/s/s3521oqd3fpi0ll/neuroharmony.pkl.gz&quot;</span><span class="p">,</span> <span class="n">filepath</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">joblib</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span></div>
@@ -358,7 +358,7 @@
         
         &copy; Copyright 2020, Rafael Garcia-Dias, Creative Commons.
       <span class="lastupdated">
-        Last updated on Nov 30, 2020.
+        Last updated on May 18, 2021.
       </span>
 
     </p>
