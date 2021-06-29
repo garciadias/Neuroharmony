@@ -11,7 +11,6 @@ with open("README.rst") as readme_file:
 requirements = [
     "numpy>=1.16.1",
     "pandas>=1.1.4",
-    "pytest>=5.1.3",
     "scikit_learn>=0.22.2.post1",
     "scipy>=1.2.0",
     "tqdm>=4.31.1",
