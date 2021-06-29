@@ -1,14 +1,16 @@
+"""Neuroharmony classes and functions."""
 from os import devnull
 from warnings import warn
 import sys
 
 from tqdm import tqdm
+from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.decomposition import PCA
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.exceptions import NotFittedError
+from sklearn.model_selection import LeaveOneGroupOut, RandomizedSearchCV
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import LabelEncoder, StandardScaler
-from sklearn.model_selection import LeaveOneGroupOut, RandomizedSearchCV
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.decomposition import PCA
-from sklearn.base import BaseEstimator, TransformerMixin
 from pandas.core.generic import NDFrame
 from pandas import Series, DataFrame, concat, merge
 from numpy import unique, number
@@ -95,6 +97,7 @@ class ComBat(BaseEstimator, TransformerMixin):
     """
 
     def __init__(self, features, covariates, eliminate_variance):
+        """Init class."""
         self.covariates = covariates
         self.eliminate_variance = eliminate_variance
         self.features = features
@@ -260,7 +263,7 @@ class ComBat(BaseEstimator, TransformerMixin):
 
 
 class Neuroharmony(TransformerMixin, BaseEstimator):
-    """ Harmonization tool to mitigate scanner bias.
+    """Harmonization tool to mitigate scanner bias.
 
     Parameters
     ----------
@@ -274,6 +277,9 @@ class Neuroharmony(TransformerMixin, BaseEstimator):
         Model to make the harmonization regression.
     scaler : sklearn scaler, default=StandardScaler()
         Scaler used as the first step of the harmonization regression.
+    model_strategy : {"single", "full"}, default="single"
+        If "single" one model will be trained for each single feature in `features`. If "full" it will use a single
+        model to regress all the `features` at once.
     param_distributions : dict, default=dict(RandomForestRegressor__n_estimators=[100, 200, 500],
                                              RandomForestRegressor__warm_start=[False, True], )
         Distribution of parameters to be testes on the RandomizedSearchCV.
@@ -307,6 +313,7 @@ class Neuroharmony(TransformerMixin, BaseEstimator):
         estimator=RandomForestRegressor(),
         scaler=StandardScaler(),
         decomposition=PCA(),
+        model_strategy="single",
         param_distributions=dict(
             RandomForestRegressor__n_estimators=[100, 200, 500],
             RandomForestRegressor__criterion=["mse", "mae"],
@@ -317,18 +324,20 @@ class Neuroharmony(TransformerMixin, BaseEstimator):
         randomized_search_args=dict(),
         pipeline_args=dict(),
     ):
+        """Init class."""
+        self.features = features
+        self.regression_features = regression_features
         self.covariates = covariates
-        self.decomposition = decomposition
         self.eliminate_variance = eliminate_variance
         self.estimator = estimator
-        self.estimator.set_params(**estimator_args)
-        self.features = features
-        self.param_distributions = param_distributions
-        self.pipeline_args = pipeline_args
-        self.randomized_search_args = randomized_search_args
-        self.regression_features = regression_features
-        self.reindexed = False
         self.scaler = scaler
+        self.decomposition = decomposition
+        self.model_strategy = model_strategy
+        self.param_distributions = param_distributions
+        self.randomized_search_args = randomized_search_args
+        self.pipeline_args = pipeline_args
+        self.reindexed = False
+        self.estimator.set_params(**estimator_args)
         self.scaler.set_params(**scaler_args)
 
     def fit(self, df):
@@ -354,10 +363,17 @@ class Neuroharmony(TransformerMixin, BaseEstimator):
         X_train_split, y_train_split = self._run_combat(df.copy())
         self.models_by_feature_ = {}
         desc = "Randomized search of Neuroharmony hyperparameters: "
-        for var in tqdm(self.features, desc=desc):
-            self.models_by_feature_[var] = self._random_search_with_leave_one_group_out_cv(
-                X_train_split[self.regression_features + [var]], y_train_split[var], y_train_split["scanner"],
+        if self.model_strategy == "single":
+            self.models_by_feature_["all"] = self._random_search_with_leave_one_group_out_cv(
+                X_train_split[self.regression_features + self.features],
+                y_train_split[self.features],
+                y_train_split["scanner"],
             )
+        else:
+            for var in tqdm(self.features, desc=desc):
+                self.models_by_feature_[var] = self._random_search_with_leave_one_group_out_cv(
+                    X_train_split[self.regression_features + [var]], y_train_split[var], y_train_split["scanner"],
+                )
         return self
 
     def fit_transform(self, df):
@@ -396,15 +412,22 @@ class Neuroharmony(TransformerMixin, BaseEstimator):
             Data harmonized with Neuroharmony.
         """
         # Check data
+        self._check_trained_model()
         self._check_data(df.copy())
         self._check_prediction_ranges(df.copy())
         df = self._check_index(df.copy())
         df, self.encoders = _label_encode_covariates(df.copy(), unique(self.covariates + self.eliminate_variance))
-        self.models_by_feature_[self.features[0]]._check_is_fitted("predict")
         self.predicted_ = DataFrame([], columns=self.features, index=df.index)
-        for var in self.features:
-            predicted_y_1 = self.models_by_feature_[var].predict(df[self.regression_features + [var]])
-            self.predicted_[var] = df[var] - predicted_y_1
+        if self.model_strategy == "single":
+            self.models_by_feature_["all"]._check_is_fitted("predict")
+            predicted_y = self.models_by_feature_["all"].predict(df[self.regression_features + self.features])
+            self.predicted_ = df[self.features] - predicted_y
+
+        else:
+            self.models_by_feature_[self.features[0]]._check_is_fitted("predict")
+            for var in self.features:
+                predicted_y_1 = self.models_by_feature_[var].predict(df[self.regression_features + [var]])
+                self.predicted_[var] = df[var] - predicted_y_1
         self.predicted_ = self._reconstruct_original_fieds(df, self.predicted_, self.extra_vars)
         self.predicted_ = _label_decode_covariates(
             self.predicted_, unique(self.covariates + self.eliminate_variance), self.encoders,
@@ -431,6 +454,49 @@ class Neuroharmony(TransformerMixin, BaseEstimator):
         """
         return self.predict(df.copy())
 
+    def refit(self, df):
+        """Fit a trained model with a new dataset.
+
+        Parameters
+        ----------
+        df : NDFrame of shape [n_samples, n_features]
+            Pandas dataframe with features, regression_features and covariates.
+        """
+        # Check data
+        self._check_trained_model()
+        self._check_data(df.copy())
+        df = self._check_index(df.copy())
+        self._check_training_ranges(df.copy())
+        df, self.encoders = _label_encode_covariates(df.copy(), unique(self.covariates + self.eliminate_variance))
+        if self.model_strategy == "single":
+            self.models_by_feature_["all"]._check_is_fitted("predict")
+        else:
+            self.models_by_feature_[self.features[0]]._check_is_fitted("predict")
+
+        X_train_split, y_train_split = self._run_combat(df.copy())
+        if self.model_strategy == "single":
+            self.models_by_feature_["all"].best_estimator_[2].warm_start = False
+            self.models_by_feature_["all"].best_estimator_.fit(
+                X_train_split[self.regression_features + self.features], y_train_split[self.features],
+            )
+        else:
+            desc = "Retraining Neuroharmony hyperparameters: "
+            for var in tqdm(self.features, desc=desc):
+                self.models_by_feature_[var].best_estimator_[2].warm_start = False
+                self.models_by_feature_[var].best_estimator_.fit(
+                    X_train_split[self.regression_features + [var]], y_train_split[var],
+                )
+        return self
+
+    def _check_trained_model(self):
+        if hasattr(self, "models_by_feature_"):
+            return self
+        else:
+            raise NotFittedError(
+                "This Neuroharmony instance is not fitted yet. Call 'fit' with appropriate arguments"
+                " before using this estimator."
+            )
+
     def _check_vars(self, df, vars):
         vars = Series(vars)
         # verify all needed variables are present
@@ -444,7 +510,7 @@ class Neuroharmony(TransformerMixin, BaseEstimator):
         self.numeric_features = df[vars].select_dtypes(include=number).columns.tolist()
         numeric_vars = [var for var in vars if var in self.numeric_features]
         self.coverage_ = concat(
-            [df[numeric_vars].min(skipna=True), df[numeric_vars].max(skipna=True),], axis=1, keys=["min", "max"],
+            [df[numeric_vars].min(skipna=True), df[numeric_vars].max(skipna=True)], axis=1, keys=["min", "max"],
         )
 
     def _check_prediction_ranges(self, df):

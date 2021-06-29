@@ -1,16 +1,23 @@
 """Tests for harmonization with Neuroharmony."""
 from collections import namedtuple
 
-from pandas.core.generic import NDFrame
 from pandas import concat
-import pytest
+from pandas.core.generic import NDFrame
 from sklearn.base import BaseEstimator
+from sklearn.exceptions import NotFittedError
+import joblib
+import pytest
 
+from neuroharmony import fetch_trained_model
 from neuroharmony.data.collect_tools import fetch_sample
-from neuroharmony.models.harmonization import Neuroharmony, _label_encode_covariates, _label_decode_covariates
-from neuroharmony.models.harmonization import exclude_single_subject_groups
-from neuroharmony.models.metrics import ks_test_grid
 from neuroharmony.data.rois import rois
+from neuroharmony.models.harmonization import exclude_single_subject_groups
+from neuroharmony.models.harmonization import (
+    Neuroharmony,
+    _label_encode_covariates,
+    _label_decode_covariates,
+)
+from neuroharmony.models.metrics import ks_test_grid
 
 
 @pytest.fixture(scope="session")
@@ -85,6 +92,7 @@ def test_label_encode_decode(resources):
     assert all([isinstance(value, str) for value in df.scanner])
 
 
+@pytest.fixture
 def test_neuroharmony_behaviour(resources):
     """Test Neuroharmony."""
     x_train, x_test = resources.X_train_split, resources.X_test_split
@@ -103,6 +111,7 @@ def test_neuroharmony_behaviour(resources):
     )
     x_train_harmonized = neuroharmony.fit_transform(x_train)
     x_test_harmonized = neuroharmony.predict(x_test)
+    joblib.dump(neuroharmony, "data/neuroharmony.pkl.gz")
     data_harmonized = concat([x_train_harmonized, x_test_harmonized], sort=False)
     KS_original = ks_test_grid(resources.original_data, resources.features, "scanner")
     KS_harmonized = ks_test_grid(data_harmonized, resources.features, "scanner")
@@ -111,6 +120,14 @@ def test_neuroharmony_behaviour(resources):
     assert isinstance(x_test, NDFrame)
     assert isinstance(neuroharmony, BaseEstimator)
     assert not neuroharmony.prediction_is_covered_.all(), "No subjects out of the range."
+
+
+def test_predict_untrained_model(model, resources):
+    """Test check model can record the training range of each variables."""
+    neuroharmony = model
+    _, x_test = resources.X_train_split, resources.X_test_split
+    with pytest.raises(NotFittedError):
+        neuroharmony.predict(x_test)
 
 
 def test_ckeck_training_range(model, resources):
@@ -130,3 +147,40 @@ def test_ckeck_prediction_range(model, resources):
     assert not neuroharmony.prediction_is_covered_.isna().any(), "NaN field detected."
     assert not neuroharmony.prediction_is_covered_.all(), "No subjects out of the range."
     assert isinstance(neuroharmony.subjects_out_of_range_, list), "The subjects_out_of_range_ is not a list."
+
+
+def test_fetch_model():
+    """Test a trained model can be retrained."""
+    neuroharmony = fetch_trained_model()
+    X = fetch_sample()
+    x_harmonized = neuroharmony.transform(X)
+    assert isinstance(neuroharmony.coverage_, NDFrame)
+
+
+def test_retrain_a_model(test_neuroharmony_behaviour, resources):
+    """Test a trained model can be retrained."""
+    neuroharmony = joblib.load("data/neuroharmony.pkl.gz")
+    x_train, _ = resources.X_train_split, resources.X_test_split
+    neuroharmony.refit(x_train)
+
+
+def test_model_strategy(resources):
+    """Test the model_strategy is implemented."""
+    x_train, x_test = resources.X_train_split, resources.X_test_split
+    neuroharmony = Neuroharmony(
+        resources.features,
+        resources.regression_features,
+        resources.covariates,
+        resources.eliminate_variance,
+        param_distributions=dict(
+            RandomForestRegressor__n_estimators=[5, 10, 15, 20],
+            RandomForestRegressor__random_state=[42, 78],
+            RandomForestRegressor__warm_start=[False, True],
+        ),
+        estimator_args=dict(n_jobs=1, random_state=42),
+        randomized_search_args=dict(cv=5, n_jobs=27),
+    )
+    x_train_harmonized = neuroharmony.fit_transform(x_train)
+    x_test_harmonized = neuroharmony.predict(x_test)
+    assert isinstance(x_train_harmonized, NDFrame)
+    assert isinstance(x_test_harmonized, NDFrame)
