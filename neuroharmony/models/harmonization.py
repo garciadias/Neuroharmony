@@ -551,8 +551,9 @@ class Neuroharmony(TransformerMixin, BaseEstimator):
         X = self.scaler.fit_transform(X)
         self.decomposition.set_params(n_components=X.shape[1])
         self.decomposition.fit(X)
-        n = next(i for i, x in enumerate(self.decomposition.explained_variance_ratio_) if x < 0.01)
-        return [n + 1]
+        cumulative_evr = [self.decomposition.explained_variance_ratio_[: i + 1].sum() for i in range(X.shape[1])]
+        n = next(i for i, x in enumerate(cumulative_evr) if x > 0.90)
+        return [n]
 
     def _clean_bad_pca_parameters(self, X):
         n_vars = len(self.regression_features) + 1
