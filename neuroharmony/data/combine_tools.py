@@ -75,7 +75,7 @@ def combine_mriqc(mri_path=None, group_path=None, mclf_path=None):
                           MCLF files found:\n{pred_path}")
     iqm = pd.read_csv(iqm_path, header=0, sep="\t")
     pred = pd.read_csv(pred_path, header=0)
-    pred["bids_name"] = "sub-" + pred.subject_id + "_T1w"
+    pred["bids_name"] =pred.subject_id + "_T1w"
     pred.drop(columns="subject_id", inplace=True)
     combined = pd.merge(iqm, pred, left_on="bids_name", right_on="bids_name")
     combined.rename(columns={"bids_name": "participant_id"}, inplace=True)
