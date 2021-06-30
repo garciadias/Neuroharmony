@@ -153,7 +153,7 @@ def test_fetch_model():
     """Test a trained model can be retrained."""
     neuroharmony = fetch_trained_model()
     X = fetch_sample()
-    x_harmonized = neuroharmony.transform(X)
+    neuroharmony.transform(X)
     assert isinstance(neuroharmony.coverage_, NDFrame)
 
 
@@ -164,7 +164,8 @@ def test_retrain_a_model(test_neuroharmony_behaviour, resources):
     neuroharmony.refit(x_train)
 
 
-def test_model_strategy(resources):
+@pytest.mark.parametrize("model_strategy", ["full", "single"])
+def test_model_strategy(resources, model_strategy):
     """Test the model_strategy is implemented."""
     x_train, x_test = resources.X_train_split, resources.X_test_split
     neuroharmony = Neuroharmony(
@@ -177,6 +178,7 @@ def test_model_strategy(resources):
             RandomForestRegressor__random_state=[42, 78],
             RandomForestRegressor__warm_start=[False, True],
         ),
+        model_strategy=model_strategy,
         estimator_args=dict(n_jobs=1, random_state=42),
         randomized_search_args=dict(cv=5, n_jobs=27),
     )
@@ -184,3 +186,22 @@ def test_model_strategy(resources):
     x_test_harmonized = neuroharmony.predict(x_test)
     assert isinstance(x_train_harmonized, NDFrame)
     assert isinstance(x_test_harmonized, NDFrame)
+
+
+def test_model_invalid_strategy(resources):
+    """Test the model_strategy is implemented."""
+    with pytest.raises(ValueError):
+        Neuroharmony(
+            resources.features,
+            resources.regression_features,
+            resources.covariates,
+            resources.eliminate_variance,
+            param_distributions=dict(
+                RandomForestRegressor__n_estimators=[5, 10, 15, 20],
+                RandomForestRegressor__random_state=[42, 78],
+                RandomForestRegressor__warm_start=[False, True],
+            ),
+            model_strategy=None,
+            estimator_args=dict(n_jobs=1, random_state=42),
+            randomized_search_args=dict(cv=5, n_jobs=27),
+        )

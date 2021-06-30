@@ -339,6 +339,8 @@ class Neuroharmony(TransformerMixin, BaseEstimator):
         self.reindexed = False
         self.estimator.set_params(**estimator_args)
         self.scaler.set_params(**scaler_args)
+        if self.model_strategy not in ["full", "single"]:
+            raise ValueError(f"model_strategy must be `full` or `single`. model_strategy = {self.model_strategy}")
 
     def fit(self, df):
         """Fit the model.
@@ -363,13 +365,15 @@ class Neuroharmony(TransformerMixin, BaseEstimator):
         X_train_split, y_train_split = self._run_combat(df.copy())
         self.models_by_feature_ = {}
         desc = "Randomized search of Neuroharmony hyperparameters: "
-        if self.model_strategy == "single":
+        if self.model_strategy not in ["full", "single"]:
+            raise ValueError(f"model_strategy must be `full` or `single`. model_strategy = {self.model_strategy}")
+        if self.model_strategy == "full":
             self.models_by_feature_["all"] = self._random_search_with_leave_one_group_out_cv(
                 X_train_split[self.regression_features + self.features],
                 y_train_split[self.features],
                 y_train_split["scanner"],
             )
-        else:
+        if self.model_strategy == "single":
             for var in tqdm(self.features, desc=desc):
                 self.models_by_feature_[var] = self._random_search_with_leave_one_group_out_cv(
                     X_train_split[self.regression_features + [var]], y_train_split[var], y_train_split["scanner"],
@@ -418,12 +422,13 @@ class Neuroharmony(TransformerMixin, BaseEstimator):
         df = self._check_index(df.copy())
         df, self.encoders = _label_encode_covariates(df.copy(), unique(self.covariates + self.eliminate_variance))
         self.predicted_ = DataFrame([], columns=self.features, index=df.index)
-        if self.model_strategy == "single":
+        if self.model_strategy not in ["full", "single"]:
+            raise ValueError(f"model_strategy must be `full` or `single`. model_strategy = {self.model_strategy}")
+        if self.model_strategy == "full":
             self.models_by_feature_["all"]._check_is_fitted("predict")
             predicted_y = self.models_by_feature_["all"].predict(df[self.regression_features + self.features])
             self.predicted_ = df[self.features] - predicted_y
-
-        else:
+        if self.model_strategy == "single":
             self.models_by_feature_[self.features[0]]._check_is_fitted("predict")
             for var in self.features:
                 predicted_y_1 = self.models_by_feature_[var].predict(df[self.regression_features + [var]])
@@ -469,23 +474,23 @@ class Neuroharmony(TransformerMixin, BaseEstimator):
         self._check_training_ranges(df.copy())
         df, self.encoders = _label_encode_covariates(df.copy(), unique(self.covariates + self.eliminate_variance))
         if self.model_strategy == "single":
-            self.models_by_feature_["all"]._check_is_fitted("predict")
-        else:
             self.models_by_feature_[self.features[0]]._check_is_fitted("predict")
+        if self.model_strategy == "full":
+            self.models_by_feature_["all"]._check_is_fitted("predict")
 
         X_train_split, y_train_split = self._run_combat(df.copy())
         if self.model_strategy == "single":
-            self.models_by_feature_["all"].best_estimator_[2].warm_start = False
-            self.models_by_feature_["all"].best_estimator_.fit(
-                X_train_split[self.regression_features + self.features], y_train_split[self.features],
-            )
-        else:
             desc = "Retraining Neuroharmony hyperparameters: "
             for var in tqdm(self.features, desc=desc):
                 self.models_by_feature_[var].best_estimator_[2].warm_start = False
                 self.models_by_feature_[var].best_estimator_.fit(
                     X_train_split[self.regression_features + [var]], y_train_split[var],
                 )
+        if self.model_strategy == "full":
+            self.models_by_feature_["all"].best_estimator_[2].warm_start = False
+            self.models_by_feature_["all"].best_estimator_.fit(
+                X_train_split[self.regression_features + self.features], y_train_split[self.features],
+            )
         return self
 
     def _check_trained_model(self):
