@@ -1,7 +1,7 @@
 joblib==0.16.0
 Sphinx==3.1.2
 pandas==1.0.1
-numpy==1.16.1
+numpy==1.22.0
 numpydoc
 sphinx_gallery==0.7.0
 matplotlib==3.2.2
