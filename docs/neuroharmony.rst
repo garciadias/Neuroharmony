@@ -10,6 +10,7 @@
 .. _recon-all: https://surfer.nmr.mgh.harvard.edu/fswiki/recon-all
 .. _MRIQC: https://mriqc.readthedocs.io/en/latest/
 .. _`(Esteban, O. et al., 2017)`: https://doi.org/10.1371/journal.pone.0184661
+.. _scikit-learn: https://scikit-learn.org/stable/
 .. _`10.1016/j.neuroimage.2020.117127` : https://www.sciencedirect.com/science/article/pii/S1053811920306133?via%3Dihub
 .. _ComBat : https://github.com/Jfortin1/ComBatHarmonization
 .. _`Qoala-T` : https://github.com/Qoala-T/QC
@@ -154,14 +155,6 @@ Train your own Neuroharmony model
     )
     # Fit the model.
     x_train_harmonized = harmony.fit_transform(x_train)
-
-
-
-Citation
----------------
-If you use Neuroharmony, please cite the following publication:
-Garcia-Dias R, et al. 'Neuroharmony: A new tool for harmonizing volumetric MRI data from unseen scanners.'
-Neuroimage. 2020 Oct 15;220:117127. doi: `10.1016/j.neuroimage.2020.117127`.
 
 
 FAQs
@@ -363,4 +356,10 @@ J.NEUROIMAGE.2019.01.014.
 Scikit-learn: machine learning in Python. J. Mach. Learn. Res. 12 (Oct), 2825–2830. 
 Retrieved from. http://jmlr.csail.mit.edu/papers/v12/pedregosa11a.html.
 
+
+Citation
+---------------
+If you use Neuroharmony, please cite the following publication:
+Garcia-Dias R, et al. 'Neuroharmony: A new tool for harmonizing volumetric MRI data from unseen scanners.'
+Neuroimage. 2020 Oct 15;220:117127. doi: `10.1016/j.neuroimage.2020.117127`.
 
